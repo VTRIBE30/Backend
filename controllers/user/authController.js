@@ -1,3 +1,9 @@
+const Wallet = require("../../models/wallet");
+const { generateHash } = require("../../utils/bcrypt");
+const { validateSignUp } = require("../../utils/validation");
+const { generateVerificationCode } = require("../../utils/verificationCode");
+const { User } = require("../../models/user");
+
 exports.signUp = async (req, res) => {
   try {
     // Trim and convert email to lowercase before validating
@@ -20,17 +26,7 @@ exports.signUp = async (req, res) => {
       });
     }
 
-    const {
-      firstName,
-      lastName,
-      email,
-      password: req_password,
-      cpassword,
-      phoneNumber,
-      dateOfBirth,
-      device,
-      couponCode,
-    } = trimmedBody;
+    const { email, password: req_password, cpassword } = trimmedBody;
     if (req_password !== cpassword) {
       return res.status(400).json({
         status: false,
@@ -58,18 +54,8 @@ exports.signUp = async (req, res) => {
     const generatedVerificationCode = generateVerificationCode();
 
     const newUser = new User({
-      firstName,
-      lastName,
       email,
       password: hashedPassword,
-      phoneNumber,
-      dateOfBirth,
-      devices: [
-        {
-          model: device.model,
-          deviceId: device.deviceId,
-        },
-      ],
     });
 
     await newUser.save();
@@ -83,24 +69,6 @@ exports.signUp = async (req, res) => {
 
     newUser.walletId = savedWallet._id;
 
-    if (couponCode) {
-      const coupon = await Coupon.findOne({ code: couponCode });
-
-      if (!coupon || coupon.isUsed) {
-        return res.status(400).json({
-          status: false,
-          error: "Invalid or used coupon code",
-        });
-      }
-
-      savedWallet.balance += coupon.value;
-      coupon.isUsed = true;
-      coupon.userId = newUser._id;
-
-      await wallet.save();
-      await coupon.save();
-    }
-
     const savedUser = await newUser.save();
 
     const verificationToken = new Token({
@@ -109,9 +77,7 @@ exports.signUp = async (req, res) => {
     });
     const savedToken = await verificationToken.save();
 
-    await sendVerificationSms(savedUser.phoneNumber, savedToken.token);
-
-    await sendWelcomeEmail(savedUser.email, savedUser.firstName);
+    // await sendWelcomeEmail(savedUser.email, savedUser.firstName);
 
     const { password, ...others } = savedUser._doc;
 
@@ -121,11 +87,7 @@ exports.signUp = async (req, res) => {
       token: others.token,
     });
   } catch (error) {
-    console.error("Error in signUp:", error);
-    return res.status(500).json({
-      status: false,
-      error: "An error occurred during user registration",
-    });
+    next(error)
   }
 };
 
