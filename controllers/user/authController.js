@@ -1,10 +1,15 @@
 const Wallet = require("../../models/wallet");
-const { generateHash } = require("../../utils/bcrypt");
-const { validateSignUp } = require("../../utils/validation");
+const { generateHash, validatePassword } = require("../../utils/bcrypt");
+const { validateSignUp, validateSignIn } = require("../../utils/validation");
 const { generateVerificationCode } = require("../../utils/verificationCode");
-const { User } = require("../../models/user");
+const JWT = require("../../utils/jwt");
+const User = require("../../models/user");
+const Token = require("../../models/token");
 
-exports.signUp = async (req, res) => {
+// Instatiating jwt helper
+const jwt = new JWT();
+
+exports.signUp = async (req, res, next) => {
   try {
     // Trim and convert email to lowercase before validating
     const trimmedBody = Object.fromEntries(
@@ -26,26 +31,12 @@ exports.signUp = async (req, res) => {
       });
     }
 
-    const { email, password: req_password, cpassword } = trimmedBody;
-    if (req_password !== cpassword) {
-      return res.status(400).json({
-        status: false,
-        error: "Passwords does not match",
-      });
-    }
+    const { email, password: req_password } = trimmedBody;
     const existingEmailUser = await User.findOne({ email });
     if (existingEmailUser) {
       return res.status(409).json({
         status: false,
         error: "User with this email already exists",
-      });
-    }
-
-    const existingPhoneUser = await User.findOne({ phoneNumber });
-    if (existingPhoneUser) {
-      return res.status(409).json({
-        status: false,
-        error: "User with this phone number already exists",
       });
     }
 
@@ -86,8 +77,8 @@ exports.signUp = async (req, res) => {
       message: "User registered successfully",
       token: others.token,
     });
-  } catch (error) {
-    next(error)
+  } catch (err) {
+    next(err)
   }
 };
 
@@ -142,7 +133,7 @@ exports.verifyEmail = async (req, res) => {
   }
 };
 
-exports.signIn = async (req, res) => {
+exports.signIn = async (req, res, next) => {
   try {
     const trimmedBody = Object.fromEntries(
       Object.entries(req.body).map(([key, value]) => {
@@ -162,7 +153,7 @@ exports.signIn = async (req, res) => {
         error: error.details.map((detail) => detail.message),
       });
     }
-    const { email, password, device } = trimmedBody;
+    const { email, password } = trimmedBody;
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({
@@ -170,36 +161,18 @@ exports.signIn = async (req, res) => {
         error: "Invalid email",
       });
     }
-    if (!user.isPhoneVerified) {
+    if (!user.isEmailVerified) {
       return res.status(403).json({
         status: false,
-        message: "Please verify your phone number before signing in",
+        message: "Please verify your email before signing in",
       });
     }
 
     const isPasswordValid = validatePassword(password, user.password);
     if (!isPasswordValid) {
-      await LoginAttempt.create({ email: user.email });
       return res.status(401).json({
         status: false,
         error: "Invalid password",
-      });
-    }
-
-    // console.log(user.devices)
-    // console.log(device?.deviceId + "_" + device?.model)
-    // console.log(user.devices.find(item => item?.deviceId + "_" + item?.model === device?.deviceId + "_" + device?.model))
-
-    if (
-      !user.devices.find(
-        (item) =>
-          item?.deviceId + "_" + item?.model ===
-          device?.deviceId + "_" + device?.model
-      )
-    ) {
-      return res.status(401).json({
-        status: "pending",
-        error: "Device not recognized. Please verify your login.",
       });
     }
 
@@ -209,14 +182,14 @@ exports.signIn = async (req, res) => {
       user.phoneNumber
     );
 
-    const templateData = {
-      userId: user._id,
-      title: "Security Alert",
-      body: "We noticed a recent login to your account, if you were not the one, please reset your password",
-      type: "SECURITY_ALERT",
-    };
+    // const templateData = {
+    //   userId: user._id,
+    //   title: "Security Alert",
+    //   body: "We noticed a recent login to your account, if you were not the one, please reset your password",
+    //   type: "SECURITY_ALERT",
+    // };
 
-    await sendNotification(token, templateData);
+    // await sendNotification(token, templateData);
 
     // await sendLoginAlert(user.email);
 
@@ -226,11 +199,7 @@ exports.signIn = async (req, res) => {
       token,
     });
   } catch (error) {
-    console.error("Error in signIn:", error);
-    return res.status(500).json({
-      status: false,
-      error: "An error occurred during user authentication",
-    });
+    next(error)
   }
 };
 

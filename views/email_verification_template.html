@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Verification</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .logo img {
+      max-width: 100px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      border: 1px solid #e6e6e6;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 24px;
+      margin-bottom: 30px;
+      color: #3D4F58;
+    }
+
+    p {
+      margin-bottom: 15px;
+    }
+
+    .verification-code {
+      text-align: center;
+      font-size: 36px;
+      font-weight: bold;
+      color: #007bff;
+      margin-top: 30px;
+      margin-bottom: 40px;
+    }
+  </style>
+</head>
+<body>
+  <div class="logo">
+    <span>VTribe</span>
+  </div>
+  <div class="container">
+    <h1>Email Verification</h1>
+    <p>Dear user,</p>
+    <p>Thank you for signing up on Banky. To complete your registration, please use the verification code below:</p>
+    <div class="verification-code">
+      <%= verificationCode %>
+    </div>
+    <p>Please enter this code in the app to verify your account.</p>
+    <p>If you did not sign up for an account on our platform, please disregard this email.</p>
+    <p>Best regards,<br>The Banky Team</p>
+    <p>
+      If you have any concerns or need assistance, please contact our support team:
+      <a href="mailto:support@banky.ca">support@banky.ca</a>
+    </p>
+  </div>
+</body>
+</html>

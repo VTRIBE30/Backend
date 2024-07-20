@@ -1,0 +1,140 @@
+*,
+html,
+body {
+    margin: 0;
+    font-family: 'Noto Sans', Helvetica, Arial, sans-serif;
+    background-color: rgb(239, 241, 255);
+    justify-items: center;
+    font-family: "Poppins", sans-serif;
+}
+
+.logo {
+  /* background-color: rgb(239, 241, 255); */
+  padding: 10px;
+  border-radius: 20px;
+}
+
+.custom-top {
+  background-color: rgb(239, 241, 255);
+  padding: 0.75rem;
+  border-top-left-radius: 0.375rem;
+  border-top-right-radius: 0.375rem;
+}
+
+.custom-logo {
+  width: 15%;
+  margin: auto;
+  display: flex;
+}
+
+.section {
+  height: fit-content;
+  margin: auto;
+  width: 400px;
+  color: black;
+  box-shadow: 0px 12px 25px rgba(0, 0, 0, 0.15);
+  background: rgb(36, 52, 103);
+}
+
+.transaction {
+  padding: 1.25rem;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  background-color: rgb(36, 52, 103);
+  color: white;
+}
+
+.section2 {
+  padding-left: 2rem;
+  padding-right: 2rem;
+  padding-top: 1.75rem;
+  padding-bottom: 1.75rem;
+  color: black;
+  background-color: white;
+}
+
+.info {
+  height: auto;
+  background-color: white;
+}
+
+.info ul {
+  margin-bottom: 1.75rem;
+}
+
+.info p {
+  background-color: white;
+  margin-bottom: 20px;
+}
+
+.info h3 {
+  background-color: white;
+  margin-bottom: 20px;
+}
+
+.horizontal-divider {
+  background-color: #e2e8f0;
+  height: 1px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.icons {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 12px;
+  color: rgb(151, 151, 164);
+  height: 73vh;
+}
+
+.icons .icon_div {
+  display: flex;
+  justify-content: space-between;
+  width: 25%;
+}
+
+.icons .icon_div .custom-border {
+  border-width: 2px;
+  padding: 0.25rem;
+  border-radius: 9999px;
+  border: 2px solid rgb(36, 52, 103);
+}
+
+.custom-border2 {
+  padding-left: 6px;
+  padding-right: 6px;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  border-radius: 9999px;
+  border: 2px solid rgb(36, 52, 103);
+}
+
+.custom-width {
+  width: 25%;
+  margin: auto;
+  display: flex;
+  padding-top: 5px;
+  margin-top: 10px;
+}
+
+.custom-background {
+  background-color: rgb(239, 241, 255);
+  padding: 1.25rem;
+  border-bottom-left-radius: 0.375rem;
+  border-bottom-right-radius: 0.375rem;
+}
+
+.verification-code {
+  text-align: center;
+  font-size: 36px;
+  font-weight: bold;
+  color: #243467;
+  margin-top: 30px;
+  margin-bottom: 40px;
+}
+
+h3 {
+  color: #243467;
+}

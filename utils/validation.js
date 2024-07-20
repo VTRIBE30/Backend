@@ -3,21 +3,8 @@ const { default: mongoose } = require("mongoose");
 
 exports.validateSignUp = (details) => {
   const signUpSchema = Joi.object({
-    firstName: Joi.string().trim().required(),
-    lastName: Joi.string().trim().required(),
     email: Joi.string().trim().email().required(),
-    password: Joi.string().required(),
-    cpassword: Joi.string().trim().required(),
-    phoneNumber: Joi.string()
-      .trim()
-      .regex(/^\+[0-9]+$/)
-      .required(),
-    dateOfBirth: Joi.date().required(),
-    device: Joi.object({
-      model: Joi.string().trim().required(),
-      deviceId: Joi.string().trim().required(),
-    }).required(),
-    couponCode: Joi.string().trim().allow("").optional(),
+    password: Joi.string().trim().required(),
   });
 
   return signUpSchema.validate(details);
@@ -26,11 +13,7 @@ exports.validateSignUp = (details) => {
 exports.validateSignIn = (details) => {
   const signInSchema = Joi.object({
     email: Joi.string().trim().email().required(),
-    password: Joi.string().required(),
-    device: Joi.object({
-      model: Joi.string().trim().required(),
-      deviceId: Joi.string().trim().required(),
-    }).required(),
+    password: Joi.string().trim().required(),
   });
 
   return signInSchema.validate(details);
