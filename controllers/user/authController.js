@@ -5,6 +5,7 @@ const { generateVerificationCode } = require("../../utils/verificationCode");
 const JWT = require("../../utils/jwt");
 const User = require("../../models/user");
 const Token = require("../../models/token");
+const { sendWelcomeEmail } = require("../../services/email");
 
 // Instatiating jwt helper
 const jwt = new JWT();
@@ -68,7 +69,11 @@ exports.signUp = async (req, res, next) => {
     });
     const savedToken = await verificationToken.save();
 
-    // await sendWelcomeEmail(savedUser.email, savedUser.firstName);
+    const templateData = {
+      verificationCode: savedToken.token
+    }
+
+    await sendWelcomeEmail(savedUser.email, templateData, next);
 
     const { password, ...others } = savedUser._doc;
 
