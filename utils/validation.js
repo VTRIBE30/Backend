@@ -50,7 +50,7 @@ exports.validateEmail = (details) => {
 
 exports.validateOtp = (details) => {
   const otpSchema = Joi.object({
-    verificationCode: Joi.string().required(),
+    verificationCode: Joi.string().trim().length(6).required(),
   });
 
   return otpSchema.validate(details);
@@ -59,7 +59,7 @@ exports.validateOtp = (details) => {
 exports.validateResetPassword = (details) => {
   const resetPasswordSchema = Joi.object({
     password: Joi.string().required(),
-    verificationCode: Joi.string().required(),
+    verificationCode: Joi.string().trim().length(6).required(),
   });
 
   return resetPasswordSchema.validate(details);

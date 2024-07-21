@@ -5,12 +5,18 @@ const {
   validateSignIn,
   validateEmailVerify,
   validateEmail,
+  validateOtp,
+  validateResetPassword,
 } = require("../../utils/validation");
 const { generateVerificationCode } = require("../../utils/verificationCode");
 const JWT = require("../../utils/jwt");
 const User = require("../../models/user");
 const Token = require("../../models/token");
-const { sendWelcomeEmail, sendOTPRequest } = require("../../services/email");
+const {
+  sendWelcomeEmail,
+  sendOTPRequest,
+  sendPasswordResetEmail,
+} = require("../../services/email");
 
 // Instatiating jwt helper
 const jwt = new JWT();
@@ -223,47 +229,49 @@ exports.signIn = async (req, res, next) => {
   }
 };
 
-exports.forgotPassword = async (req, res) => {
-  const { email } = req.body;
-  const clientURL = getClientURL(req);
-
+exports.forgotPassword = async (req, res, next) => {
   try {
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({
+    const { error } = validateEmail(req.body);
+    if (error) {
+      return res.status(400).json({
         status: false,
-        error: "User not found",
+        error: error.details.map((detail) => detail.message),
+      });
+    }
+    const { email } = req.body;
+    const existingEmail = await User.findOne({ email });
+    if (!existingEmail) {
+      return res.status(400).json({
+        status: false,
+        error: "This email isn't registered yet",
       });
     }
 
-    const generatedPasswordResetCode = generateVerificationCode();
-    console.log(generatedPasswordResetCode);
+    const generatedVerificationCode = generateVerificationCode();
 
-    const passwordResetToken = new Token({
-      user: user._id,
-      token: generatedPasswordResetCode,
+    const verificationToken = new Token({
+      user: existingEmail._id,
+      token: generatedVerificationCode,
     });
-    await passwordResetToken.save();
 
-    sendPasswordResetEmail(user.email, generatedPasswordResetCode, clientURL);
+    const savedToken = await verificationToken.save();
 
-    return res.status(200).json({
+    const templateData = { verificationCode: savedToken.token };
+
+    // Send the email otp
+    await sendPasswordResetEmail(existingEmail.email, templateData);
+
+    return res.status(201).json({
       status: true,
-      message: "Password reset email sent",
+      message: "Password reset OTP sent successfully",
     });
   } catch (error) {
-    console.error("Error sending password reset email:", error);
-    return res.status(500).json({
-      status: false,
-      error: "Internal server error",
-    });
+    next(error);
   }
 };
 
-exports.verifyOtp = async (req, res) => {
+exports.verifyOtp = async (req, res, next) => {
   try {
-    const { verificationCode } = req.body;
-
     const { error } = validateOtp(req.body);
 
     if (error) {
@@ -272,7 +280,12 @@ exports.verifyOtp = async (req, res) => {
         error: error.details[0].message,
       });
     }
-    const passwordResetToken = await Token.findOne({ token: verificationCode });
+    const { verificationCode } = req.body;
+
+    const passwordResetToken = await Token.findOne({
+      token: verificationCode,
+    });
+
     if (!passwordResetToken) {
       return res.status(400).json({
         status: false,
@@ -296,18 +309,12 @@ exports.verifyOtp = async (req, res) => {
       message: "OTP verrified successful",
     });
   } catch (error) {
-    console.error("Error verifying OTP:", error);
-    return res.status(500).json({
-      status: false,
-      error: "Internal server error",
-    });
+    next(error)
   }
 };
 
-exports.resetPassword = async (req, res) => {
+exports.resetPassword = async (req, res, next) => {
   try {
-    const { password, verificationCode } = req.body;
-
     const { error } = validateResetPassword(req.body);
 
     if (error) {
@@ -316,8 +323,10 @@ exports.resetPassword = async (req, res) => {
         error: error.details[0].message,
       });
     }
+    const { password, verificationCode } = req.body;
+
     const passwordResetToken = await Token.findOne({ token: verificationCode });
-    console.log(passwordResetToken);
+    // console.log(passwordResetToken);
     if (!passwordResetToken) {
       return res.status(400).json({
         status: false,
@@ -347,27 +356,12 @@ exports.resetPassword = async (req, res) => {
 
     await passwordResetToken.deleteOne();
 
-    const templateData = {
-      userId: user?._id,
-      title: "Security Alert",
-      body: "Your password was changed if you didn't do this contact us immediately",
-      type: "SECURITY_ALERT",
-    };
-
-    let deviceToken = "";
-
-    await sendNotification(deviceToken, templateData);
-
     return res.status(200).json({
       status: true,
       message: "Password reset successful",
     });
   } catch (error) {
-    console.error("Error resetting password:", error);
-    return res.status(500).json({
-      status: false,
-      error: "Internal server error",
-    });
+    next()
   }
 };
 
@@ -408,6 +402,6 @@ exports.sendOTP = async (req, res, next) => {
       message: "OTP sent successfully",
     });
   } catch (error) {
-    next(error)
+    next(error);
   }
 };

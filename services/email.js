@@ -89,6 +89,30 @@ exports.sendOTPRequest = async (recipientEmail, templateData, next) => {
   }
 };
 
+exports.sendPasswordResetEmail = async (recipientEmail, templateData, next) => {
+  try {
+    const templatePath = path.join(
+      __dirname,
+      "../views/password_reset_template.ejs"
+    );
+
+    const emailTemplate = await ejs.renderFile(templatePath, templateData);
+    // console.log("Email: ", process.env.EMAIL_USER)
+
+    const mailOptions = {
+      from: `"VTribe" ${process.env.EMAIL_USER}`,
+      to: recipientEmail,
+      subject: "Password Reset OTP",
+      html: emailTemplate,
+    };
+
+    await transporter.sendMail(mailOptions);
+    // console.log(`Verification email sent to ${recipientEmail}`);
+  } catch (error) {
+    next(error)
+  }
+};
+
 // Function to send a login alert email
 exports.sendLoginAlert = async (recipientEmail) => {
   try {
@@ -114,39 +138,6 @@ exports.sendLoginAlert = async (recipientEmail) => {
   } catch (error) {
     console.error("Error sending login alert email:", error);
     throw new Error("An error occurred while sending the login alert email");
-  }
-};
-
-exports.sendPasswordResetEmail = async (
-  recipientEmail,
-  verificationCode,
-  clientURL
-) => {
-  try {
-    const templateData = {
-      recipientEmail,
-      verificationCode,
-      clientURL,
-    };
-
-    const templatePath = path.join(
-      __dirname,
-      "../views/password-reset-template.ejs"
-    );
-    const emailTemplate = await ejs.renderFile(templatePath, templateData);
-
-    const mailOptions = {
-      from: `"Banky" ${process.env.EMAIL_USER}`,
-      to: recipientEmail,
-      subject: "Password Reset",
-      html: emailTemplate,
-    };
-
-    await transporter.sendMail(mailOptions);
-    // console.log('Password reset email sent successfully');
-  } catch (error) {
-    console.error("Error sending password reset email:", error);
-    throw new Error("An error occurred while sending the password reset email");
   }
 };
 
