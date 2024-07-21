@@ -1,11 +1,16 @@
 const Wallet = require("../../models/wallet");
 const { generateHash, validatePassword } = require("../../utils/bcrypt");
-const { validateSignUp, validateSignIn } = require("../../utils/validation");
+const {
+  validateSignUp,
+  validateSignIn,
+  validateEmailVerify,
+  validateEmail,
+} = require("../../utils/validation");
 const { generateVerificationCode } = require("../../utils/verificationCode");
 const JWT = require("../../utils/jwt");
 const User = require("../../models/user");
 const Token = require("../../models/token");
-const { sendWelcomeEmail } = require("../../services/email");
+const { sendWelcomeEmail, sendOTPRequest } = require("../../services/email");
 
 // Instatiating jwt helper
 const jwt = new JWT();
@@ -70,8 +75,8 @@ exports.signUp = async (req, res, next) => {
     const savedToken = await verificationToken.save();
 
     const templateData = {
-      verificationCode: savedToken.token
-    }
+      verificationCode: savedToken.token,
+    };
 
     await sendWelcomeEmail(savedUser.email, templateData, next);
 
@@ -83,58 +88,68 @@ exports.signUp = async (req, res, next) => {
       token: others.token,
     });
   } catch (err) {
-    next(err)
+    next(err);
   }
 };
 
-exports.verifyEmail = async (req, res) => {
-  const { email, verificationCode } = req.body;
-  if (!email || !verificationCode) {
-    return res.status(400).json({
-      status: false,
-      error: "All fields are required",
-    });
-  } else {
-    try {
-      // Find the token in the database
-      const verificationToken = await Token.findOne({
-        token: verificationCode,
-      });
-      console.log(verificationToken);
-      if (!verificationToken) {
-        return res.status(404).json({
-          status: false,
-          error: "Invalid or expired token",
-        });
-      }
+exports.verifyEmail = async (req, res, next) => {
+  try {
+    // Trim and convert email to lowercase before validating
+    const trimmedBody = Object.fromEntries(
+      Object.entries(req.body).map(([key, value]) => {
+        if (key === "email") {
+          return [key, value?.trim().toLowerCase()];
+        } else if (typeof value === "string") {
+          return [key, value.trim()];
+        }
+        return [key, value];
+      })
+    );
 
-      // Find the associated user
-      const user = await User.findById(verificationToken.user);
-      console.log(user);
-      if (!user) {
-        return res.status(404).json({
-          status: false,
-          error: "User not found.",
-        });
-      }
-
-      // Set the user as verified
-      user.isVerified = true;
-      await user.save();
-
-      await verificationToken.deleteOne();
-
-      return res.status(200).json({
-        status: true,
-        message: "Email verified successfully.",
-      });
-    } catch (error) {
-      console.error("Error in verifyEmail:", error);
-      return res.status(500).json({
-        staus: false,
-        error: "An error occurred while verifying the email.",
+    const { error } = validateEmailVerify(trimmedBody);
+    if (error) {
+      return res.status(400).json({
+        status: false,
+        error: error.details.map((detail) => detail.message),
       });
     }
+
+    const { email, verificationCode } = trimmedBody;
+
+    // Find the user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({
+        status: false,
+        error: "User not found.",
+      });
+    }
+
+    // Find the token in the database and ensure it belongs to the user
+    const verificationToken = await Token.findOne({
+      user: user._id,
+      token: verificationCode,
+    });
+
+    if (!verificationToken) {
+      return res.status(404).json({
+        status: false,
+        error: "Invalid or expired token",
+      });
+    }
+
+    // Set the user as verified
+    user.isEmailVerified = true;
+    await user.save();
+
+    await verificationToken.deleteOne();
+
+    return res.status(200).json({
+      status: true,
+      message: "Email verified successfully.",
+    });
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -204,7 +219,7 @@ exports.signIn = async (req, res, next) => {
       token,
     });
   } catch (error) {
-    next(error)
+    next(error);
   }
 };
 
@@ -356,45 +371,43 @@ exports.resetPassword = async (req, res) => {
   }
 };
 
-exports.sendOTP = async (req, res) => {
+exports.sendOTP = async (req, res, next) => {
   try {
-    const { error } = validatePhone(req.body);
+    const { error } = validateEmail(req.body);
     if (error) {
       return res.status(400).json({
         status: false,
         error: error.details.map((detail) => detail.message),
       });
     }
-    const { phoneNumber } = req.body;
-    const existingPhoneUser = await User.findOne({ phoneNumber });
-    if (!existingPhoneUser) {
+    const { email } = req.body;
+    const existingEmail = await User.findOne({ email });
+    if (!existingEmail) {
       return res.status(400).json({
         status: false,
-        error: "This phone number isn't registered yet",
+        error: "This email isn't registered yet",
       });
     }
 
     const generatedVerificationCode = generateVerificationCode();
 
     const verificationToken = new Token({
-      user: existingPhoneUser._id,
+      user: existingEmail._id,
       token: generatedVerificationCode,
     });
 
     const savedToken = await verificationToken.save();
 
-    // Send the verification sms
-    await sendVerificationSms(existingPhoneUser.phoneNumber, savedToken.token);
+    const templateData = { verificationCode: savedToken.token };
+
+    // Send the email otp
+    await sendOTPRequest(existingEmail.email, templateData);
 
     return res.status(201).json({
       status: true,
       message: "OTP sent successfully",
     });
   } catch (error) {
-    console.error("Error in sending OTP:", error);
-    return res.status(500).json({
-      status: false,
-      error: "An error occurred while sending the OTP",
-    });
+    next(error)
   }
 };

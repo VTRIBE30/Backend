@@ -65,6 +65,30 @@ exports.sendWelcomeEmail = async (recipientEmail, templateData, next) => {
   }
 };
 
+exports.sendOTPRequest = async (recipientEmail, templateData, next) => {
+  try {
+    const templatePath = path.join(
+      __dirname,
+      "../views/otp_template.ejs"
+    );
+
+    const emailTemplate = await ejs.renderFile(templatePath, templateData);
+    // console.log("Email: ", process.env.EMAIL_USER)
+
+    const mailOptions = {
+      from: `"VTribe" ${process.env.EMAIL_USER}`,
+      to: recipientEmail,
+      subject: "OTP request",
+      html: emailTemplate,
+    };
+
+    await transporter.sendMail(mailOptions);
+    // console.log(`Verification email sent to ${recipientEmail}`);
+  } catch (error) {
+    next(error)
+  }
+};
+
 // Function to send a login alert email
 exports.sendLoginAlert = async (recipientEmail) => {
   try {

@@ -10,6 +10,15 @@ exports.validateSignUp = (details) => {
   return signUpSchema.validate(details);
 };
 
+exports.validateEmailVerify = (details) => {
+  const schema = Joi.object({
+    email: Joi.string().trim().email().required(),
+    verificationCode: Joi.string().trim().length(6).required(),
+  });
+
+  return schema.validate(details);
+};
+
 exports.validateSignIn = (details) => {
   const signInSchema = Joi.object({
     email: Joi.string().trim().email().required(),
@@ -31,15 +40,12 @@ exports.validatePhoneVerification = (details) => {
   return verificationSchema.validate(details);
 };
 
-exports.validatePhone = (details) => {
-  const phoneNumberSchema = Joi.object({
-    phoneNumber: Joi.string()
-      .trim()
-      .regex(/^\+[0-9]+$/)
-      .required(),
+exports.validateEmail = (details) => {
+  const schema = Joi.object({
+    email: Joi.string().trim().email().required(),
   });
 
-  return phoneNumberSchema.validate(details);
+  return schema.validate(details);
 };
 
 exports.validateOtp = (details) => {
