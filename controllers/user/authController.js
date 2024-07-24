@@ -144,9 +144,14 @@ exports.verifyEmail = async (req, res, next) => {
       });
     }
 
+    // console.log(user);
+
     // Set the user as verified
     user.isEmailVerified = true;
-    await user.save();
+
+    // console.log(user.isEmailVerified);
+    const savedUser = await user.save();
+    // console.log(savedUser);
 
     await verificationToken.deleteOne();
 
