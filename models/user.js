@@ -46,6 +46,23 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    business: {
+      name: {
+        type: String,
+      },
+      about: {
+        type: String
+      },
+      address: {
+        type: String
+      },
+      city: {
+        type: String
+      },
+      State: {
+        type: String
+      }
+    },
     passcode: {
       type: String,
     },

@@ -5,7 +5,7 @@ dotenv.config();
 
 // Import configs
 const dbConnection = require('./config/database');
-// const cloudinaryConfig = require('./config/cloudinary');
+const cloudinaryConfig = require('./config/cloudinary');
 const { encrypt, decrypt } = require('./utils/encrypt');
 
 // Defining the app constant
@@ -29,7 +29,7 @@ app.use(
 );
 
 dbConnection();
-// cloudinaryConfig();
+cloudinaryConfig();
 
 // console.log(decrypt(""))
 
