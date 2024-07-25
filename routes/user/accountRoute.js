@@ -5,6 +5,8 @@ const {
   getWalletBalance,
   getUserProfile,
   updateProfile,
+  getBusinessProfile,
+  updateBusinessProfile,
 } = require("../../controllers/user/accountController");
 const {
   authenticateUser,
@@ -25,12 +27,26 @@ accountRouter.get(
   getUserProfile
 );
 
+accountRouter.get(
+  "/business/profile",
+  authorizeUser,
+  authenticateUser,
+  getBusinessProfile
+);
+
 accountRouter.put(
   "/profile/update",
   authorizeUser,
   authenticateUser,
   upload.single("profilePic"),
   updateProfile
+);
+
+accountRouter.put(
+  "/business/profile/update",
+  authorizeUser,
+  authenticateUser,
+  updateBusinessProfile
 );
 
 module.exports = accountRouter;

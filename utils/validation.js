@@ -78,10 +78,11 @@ exports.validateProfileUpdate = (details) => {
 
 exports.validateBusinessProfileUpdate = (details) => {
   const schema = Joi.object({
-    firstName: Joi.string().optional(),
-    lastName: Joi.string().optional(),
-    phoneNumber: Joi.string().optional(),
-    gender: Joi.string().valid("Male", "Female").optional(),
+    name: Joi.string().optional(),
+    about: Joi.string().optional(),
+    address: Joi.string().optional(),
+    city: Joi.string().optional(),
+    state: Joi.string().optional(),
   });
 
   return schema.validate(details);

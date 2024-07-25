@@ -1,7 +1,10 @@
 const { cloudinaryUserPfpUploader } = require("../../middlewares/cloudinary");
 const User = require("../../models/user");
 const { formatWalletBalance } = require("../../utils/functions");
-const { validateProfileUpdate } = require("../../utils/validation");
+const {
+  validateProfileUpdate,
+  validateBusinessProfileUpdate,
+} = require("../../utils/validation");
 
 exports.getWalletBalance = async (req, res, next) => {
   try {
@@ -39,7 +42,34 @@ exports.getUserProfile = async (req, res, next) => {
     return res.status(200).json({
       status: true,
       message: "User details retrieved successfully",
-      user,
+      user: {
+        firstName: user?.firstName,
+        lastName: user?.lastName,
+        email: user?.email,
+        phoneNumber: user?.phoneNumber,
+        gender: user?.gender,
+        dateOfBirth: user?.dateOfBirth,
+        profilePic: user?.profilePic,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getBusinessProfile = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const user = await User.findById(userId, { password: 0 });
+
+    if (!user) {
+      return res.status(404).json({ status: false, error: "User not found" });
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: "User business details retrieved successfully",
+      business: user.business
     });
   } catch (error) {
     next(error);
@@ -116,9 +146,46 @@ exports.updateProfile = async (req, res, next) => {
 
       return res.status(200).json({
         status: true,
-        message: "Profile updated successfully"
+        message: "Profile updated successfully",
       });
     }
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.updateBusinessProfile = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const updatedBusinessProfile = req.body;
+
+    // Validate the input using Joi
+    const { error } = validateBusinessProfileUpdate(updatedBusinessProfile);
+    if (error) {
+      return res.status(400).json({
+        status: false,
+        message: "Validation error",
+        error: error.details[0].message,
+      });
+    }
+
+    const user = await User.findOneAndUpdate(
+      { _id: userId },
+      { $set: { business: updatedBusinessProfile } },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        status: false,
+        error: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: "Business Profile updated successfully",
+    });
   } catch (error) {
     next(error);
   }
