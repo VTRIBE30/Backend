@@ -87,3 +87,11 @@ exports.validateBusinessProfileUpdate = (details) => {
 
   return schema.validate(details);
 };
+
+exports.validatePasswordChange = (data) => {
+  const schema = Joi.object({
+    oldPassword: Joi.string().required(),
+    newPassword: Joi.string().required(),
+  });
+  return schema.validate(data);
+};

@@ -1,9 +1,11 @@
 const { cloudinaryUserPfpUploader } = require("../../middlewares/cloudinary");
 const User = require("../../models/user");
+const { validatePassword, generateHash } = require("../../utils/bcrypt");
 const { formatWalletBalance } = require("../../utils/functions");
 const {
   validateProfileUpdate,
   validateBusinessProfileUpdate,
+  validatePasswordChange,
 } = require("../../utils/validation");
 
 exports.getWalletBalance = async (req, res, next) => {
@@ -69,7 +71,7 @@ exports.getBusinessProfile = async (req, res, next) => {
     return res.status(200).json({
       status: true,
       message: "User business details retrieved successfully",
-      business: user.business
+      business: user.business,
     });
   } catch (error) {
     next(error);
@@ -201,17 +203,19 @@ exports.checkUserProfileCompletion = async (req, res, next) => {
     }
 
     const requiredFields = [
-      'firstName',
-      'lastName',
-      'email',
-      'phoneNumber',
-      'gender',
-      'dateOfBirth',
-      'profilePic'
+      "firstName",
+      "lastName",
+      "email",
+      "phoneNumber",
+      "gender",
+      "dateOfBirth",
+      "profilePic",
     ];
 
-    const filledFields = requiredFields.filter(field => user[field]);
-    const completenessPercent = Math.round((filledFields.length / requiredFields.length) * 100);
+    const filledFields = requiredFields.filter((field) => user[field]);
+    const completenessPercent = Math.round(
+      (filledFields.length / requiredFields.length) * 100
+    );
     const isComplete = completenessPercent === 100;
 
     return res.status(200).json({
@@ -219,8 +223,47 @@ exports.checkUserProfileCompletion = async (req, res, next) => {
       message: "Profile completeness checked successfully",
       profileCompleteness: {
         percent: completenessPercent,
-        isComplete: isComplete
-      }
+        isComplete: isComplete,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.changePassword = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const { oldPassword, newPassword } = req.body;
+
+    const { error } = validatePasswordChange({ oldPassword, newPassword });
+    if (error) {
+      return res.status(400).json({
+        status: false,
+        error: error.details.map((detail) => detail.message),
+      });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ status: false, error: "User not found" });
+    }
+
+    const isMatch = validatePassword(oldPassword, user.password);
+    if (!isMatch) {
+      return res
+        .status(400)
+        .json({ status: false, error: "Old password is incorrect" });
+    }
+
+    const hashedNewPassword = generateHash(newPassword);
+
+    user.password = hashedNewPassword;
+    await user.save();
+
+    return res.status(200).json({
+      status: true,
+      message: "Password changed successfully",
     });
   } catch (error) {
     next(error);

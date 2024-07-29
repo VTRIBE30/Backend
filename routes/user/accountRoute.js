@@ -8,6 +8,7 @@ const {
   getBusinessProfile,
   updateBusinessProfile,
   checkUserProfileCompletion,
+  changePassword,
 } = require("../../controllers/user/accountController");
 const {
   authenticateUser,
@@ -55,6 +56,13 @@ accountRouter.put(
   authorizeUser,
   authenticateUser,
   updateBusinessProfile
+);
+
+accountRouter.post(
+  "/password/change",
+  authorizeUser,
+  authenticateUser,
+  changePassword
 );
 
 module.exports = accountRouter;
