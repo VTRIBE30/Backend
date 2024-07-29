@@ -291,7 +291,7 @@ exports.addDeliveryAddress = async (req, res, next) => {
       return res.status(404).json({ status: false, error: "User not found" });
     }
 
-    user.delieveryAddresses.push({
+    user.deliveryAddresses.push({
       firstName,
       lastName,
       phoneNumber,
@@ -313,7 +313,8 @@ exports.addDeliveryAddress = async (req, res, next) => {
 exports.editDeliveryAddress = async (req, res, next) => {
   try {
     const userId = req.user.userId;
-    const { error } = editAddressValidation(req.body);
+    const { addressId } = req.params;
+    const { error } = editAddressValidation({ addressId, ...req.body });
     if (error) {
       return res.status(400).json({
         status: false,
@@ -321,15 +322,14 @@ exports.editDeliveryAddress = async (req, res, next) => {
       });
     }
 
-    const { addressId, firstName, lastName, phoneNumber, street, city, state } =
-      req.body;
+    const { firstName, lastName, phoneNumber, street, city, state } = req.body;
 
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ status: false, error: "User not found" });
     }
 
-    const address = user.delieveryAddresses.id(addressId);
+    const address = user.deliveryAddresses.id(addressId);
     if (!address) {
       return res
         .status(404)
@@ -348,7 +348,6 @@ exports.editDeliveryAddress = async (req, res, next) => {
     return res.status(200).json({
       status: true,
       message: "Delivery Address updated successfully",
-      delieveryAddresses: user.delieveryAddresses,
     });
   } catch (error) {
     next(error);
@@ -373,20 +372,19 @@ exports.deleteDeliveryAddress = async (req, res, next) => {
       return res.status(404).json({ status: false, error: "User not found" });
     }
 
-    const address = user.delieveryAddresses.id(addressId);
+    const address = user.deliveryAddresses.id(addressId);
     if (!address) {
       return res
         .status(404)
         .json({ status: false, error: "Delivery Address not found" });
     }
 
-    address.remove();
+    address.deleteOne();
     await user.save();
 
     return res.status(200).json({
       status: true,
       message: "Delivery Address deleted successfully",
-      delieveryAddresses: user.delieveryAddresses,
     });
   } catch (error) {
     next(error);

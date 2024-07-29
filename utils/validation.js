@@ -110,16 +110,23 @@ exports.addAddressValidation = (data) => {
 
 exports.editAddressValidation = (details) => {
   const addressSchema = Joi.object({
-    firstName: Joi.string().required(),
-    lastName: Joi.string().required(),
-    phoneNumber: Joi.string().required(),
-    street: Joi.string().required(),
-    city: Joi.string().required(),
-    state: Joi.string().required(),
+    firstName: Joi.string().optional(),
+    lastName: Joi.string().optional(),
+    phoneNumber: Joi.string().optional(),
+    street: Joi.string().optional(),
+    city: Joi.string().optional(),
+    state: Joi.string().optional(),
   });
   return addressSchema
     .keys({
-      addressId: Joi.string().required(),
+      addressId: Joi.string()
+        .custom((value, helpers) => {
+          if (!mongoose.Types.ObjectId.isValid(value)) {
+            return helpers.message("Invalid address ID");
+          }
+          return value;
+        })
+        .required(),
     })
     .validate(details);
 };

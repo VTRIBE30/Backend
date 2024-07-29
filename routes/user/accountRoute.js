@@ -70,13 +70,13 @@ accountRouter.post(
   addDeliveryAddress
 );
 accountRouter.put(
-  "/delieveryAddress/edit",
+  "/deliveryAddress/edit/:addressId",
   authorizeUser,
   authenticateUser,
   editDeliveryAddress
 );
 accountRouter.delete(
-  "/delieveryAddress/delete",
+  "/deliveryAddress/delete/:addressId",
   authorizeUser,
   authenticateUser,
   deleteDeliveryAddress

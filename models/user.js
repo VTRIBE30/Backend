@@ -84,7 +84,7 @@ const userSchema = new mongoose.Schema(
         type: String,
       },
     },
-    delieveryAddresses: [addressSchema],
+    deliveryAddresses: [addressSchema],
     passcode: {
       type: String,
     },
