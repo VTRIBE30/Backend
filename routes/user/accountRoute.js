@@ -12,6 +12,7 @@ const {
   addDeliveryAddress,
   editDeliveryAddress,
   deleteDeliveryAddress,
+  getDeliveryAddresses,
 } = require("../../controllers/user/accountController");
 const {
   authenticateUser,
@@ -63,18 +64,27 @@ accountRouter.post(
   changePassword
 );
 
+accountRouter.get(
+  "/deliveryAddress",
+  authorizeUser,
+  authenticateUser,
+  getDeliveryAddresses
+);
+
 accountRouter.post(
   "/deliveryAddress/add",
   authorizeUser,
   authenticateUser,
   addDeliveryAddress
 );
+
 accountRouter.put(
   "/deliveryAddress/edit/:addressId",
   authorizeUser,
   authenticateUser,
   editDeliveryAddress
 );
+
 accountRouter.delete(
   "/deliveryAddress/delete/:addressId",
   authorizeUser,

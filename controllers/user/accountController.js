@@ -273,6 +273,25 @@ exports.changePassword = async (req, res, next) => {
   }
 };
 
+exports.getDeliveryAddresses = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ status: false, error: "User not found" });
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: "Delivery Addresses retrieved successfully",
+      deliveryAddresses: user.deliveryAddresses,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.addDeliveryAddress = async (req, res, next) => {
   try {
     const userId = req.user.userId;
