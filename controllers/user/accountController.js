@@ -190,3 +190,39 @@ exports.updateBusinessProfile = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.checkUserProfileCompletion = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const user = await User.findById(userId, { password: 0 });
+
+    if (!user) {
+      return res.status(404).json({ status: false, error: "User not found" });
+    }
+
+    const requiredFields = [
+      'firstName',
+      'lastName',
+      'email',
+      'phoneNumber',
+      'gender',
+      'dateOfBirth',
+      'profilePic'
+    ];
+
+    const filledFields = requiredFields.filter(field => user[field]);
+    const completenessPercent = Math.round((filledFields.length / requiredFields.length) * 100);
+    const isComplete = completenessPercent === 100;
+
+    return res.status(200).json({
+      status: true,
+      message: "Profile completeness checked successfully",
+      profileCompleteness: {
+        percent: completenessPercent,
+        isComplete: isComplete
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};

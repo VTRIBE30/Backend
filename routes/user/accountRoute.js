@@ -7,6 +7,7 @@ const {
   updateProfile,
   getBusinessProfile,
   updateBusinessProfile,
+  checkUserProfileCompletion,
 } = require("../../controllers/user/accountController");
 const {
   authenticateUser,
@@ -25,6 +26,13 @@ accountRouter.get(
   authorizeUser,
   authenticateUser,
   getUserProfile
+);
+
+accountRouter.get(
+  "/profile/completion",
+  authorizeUser,
+  authenticateUser,
+  checkUserProfileCompletion
 );
 
 accountRouter.get(
