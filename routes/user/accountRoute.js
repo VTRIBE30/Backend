@@ -9,6 +9,9 @@ const {
   updateBusinessProfile,
   checkUserProfileCompletion,
   changePassword,
+  addDeliveryAddress,
+  editDeliveryAddress,
+  deleteDeliveryAddress,
 } = require("../../controllers/user/accountController");
 const {
   authenticateUser,
@@ -22,12 +25,7 @@ accountRouter.get(
   getWalletBalance
 );
 
-accountRouter.get(
-  "/profile",
-  authorizeUser,
-  authenticateUser,
-  getUserProfile
-);
+accountRouter.get("/profile", authorizeUser, authenticateUser, getUserProfile);
 
 accountRouter.get(
   "/profile/completion",
@@ -63,6 +61,25 @@ accountRouter.post(
   authorizeUser,
   authenticateUser,
   changePassword
+);
+
+accountRouter.post(
+  "/deliveryAddress/add",
+  authorizeUser,
+  authenticateUser,
+  addDeliveryAddress
+);
+accountRouter.put(
+  "/delieveryAddress/edit",
+  authorizeUser,
+  authenticateUser,
+  editDeliveryAddress
+);
+accountRouter.delete(
+  "/delieveryAddress/delete",
+  authorizeUser,
+  authenticateUser,
+  deleteDeliveryAddress
 );
 
 module.exports = accountRouter;

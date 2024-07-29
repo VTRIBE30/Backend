@@ -95,3 +95,45 @@ exports.validatePasswordChange = (data) => {
   });
   return schema.validate(data);
 };
+
+exports.addAddressValidation = (data) => {
+  const addressSchema = Joi.object({
+    firstName: Joi.string().required(),
+    lastName: Joi.string().required(),
+    phoneNumber: Joi.string().required(),
+    street: Joi.string().required(),
+    city: Joi.string().required(),
+    state: Joi.string().required(),
+  });
+  return addressSchema.validate(data);
+};
+
+exports.editAddressValidation = (details) => {
+  const addressSchema = Joi.object({
+    firstName: Joi.string().required(),
+    lastName: Joi.string().required(),
+    phoneNumber: Joi.string().required(),
+    street: Joi.string().required(),
+    city: Joi.string().required(),
+    state: Joi.string().required(),
+  });
+  return addressSchema
+    .keys({
+      addressId: Joi.string().required(),
+    })
+    .validate(details);
+};
+
+exports.deleteAddressValidation = (details) => {
+  const schema = Joi.object({
+    addressId: Joi.string()
+      .custom((value, helpers) => {
+        if (!mongoose.Types.ObjectId.isValid(value)) {
+          return helpers.message("Invalid chat ID");
+        }
+        return value;
+      })
+      .required(),
+  });
+  return schema.validate(details);
+};

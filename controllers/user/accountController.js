@@ -6,6 +6,9 @@ const {
   validateProfileUpdate,
   validateBusinessProfileUpdate,
   validatePasswordChange,
+  addAddressValidation,
+  editAddressValidation,
+  deleteAddressValidation,
 } = require("../../utils/validation");
 
 exports.getWalletBalance = async (req, res, next) => {
@@ -264,6 +267,126 @@ exports.changePassword = async (req, res, next) => {
     return res.status(200).json({
       status: true,
       message: "Password changed successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.addDeliveryAddress = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const { error } = addAddressValidation(req.body);
+    if (error) {
+      return res.status(400).json({
+        status: false,
+        error: error.details.map((detail) => detail.message),
+      });
+    }
+
+    const { firstName, lastName, phoneNumber, street, city, state } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ status: false, error: "User not found" });
+    }
+
+    user.delieveryAddresses.push({
+      firstName,
+      lastName,
+      phoneNumber,
+      street,
+      city,
+      state,
+    });
+    await user.save();
+
+    return res.status(201).json({
+      status: true,
+      message: "Delivery Address added successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.editDeliveryAddress = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const { error } = editAddressValidation(req.body);
+    if (error) {
+      return res.status(400).json({
+        status: false,
+        error: error.details.map((detail) => detail.message),
+      });
+    }
+
+    const { addressId, firstName, lastName, phoneNumber, street, city, state } =
+      req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ status: false, error: "User not found" });
+    }
+
+    const address = user.delieveryAddresses.id(addressId);
+    if (!address) {
+      return res
+        .status(404)
+        .json({ status: false, error: "Delivery Address not found" });
+    }
+
+    address.firstName = firstName || address.firstName;
+    address.lastName = lastName || address.lastName;
+    address.phoneNumber = phoneNumber || address.phoneNumber;
+    address.street = street || address.street;
+    address.city = city || address.city;
+    address.state = state || address.state;
+
+    await user.save();
+
+    return res.status(200).json({
+      status: true,
+      message: "Delivery Address updated successfully",
+      delieveryAddresses: user.delieveryAddresses,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deleteDeliveryAddress = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const { error } = deleteAddressValidation(req.params);
+    if (error) {
+      return res.status(400).json({
+        status: false,
+        error: error.details.map((detail) => detail.message),
+      });
+    }
+
+    const { addressId } = req.params;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ status: false, error: "User not found" });
+    }
+
+    const address = user.delieveryAddresses.id(addressId);
+    if (!address) {
+      return res
+        .status(404)
+        .json({ status: false, error: "Delivery Address not found" });
+    }
+
+    address.remove();
+    await user.save();
+
+    return res.status(200).json({
+      status: true,
+      message: "Delivery Address deleted successfully",
+      delieveryAddresses: user.delieveryAddresses,
     });
   } catch (error) {
     next(error);
