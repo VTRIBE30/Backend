@@ -144,3 +144,74 @@ exports.deleteAddressValidation = (details) => {
   });
   return schema.validate(details);
 };
+
+exports.validateAppealCreation = (appeal) => {
+  const schema = Joi.object({
+    orderId: Joi.string()
+      .custom((value, helpers) => {
+        if (!mongoose.Types.ObjectId.isValid(value)) {
+          return helpers.message("Invalid order ID");
+        }
+        return value;
+      })
+      .required(),
+    subject: Joi.string().required(),
+  });
+
+  return schema.validate(appeal);
+};
+
+exports.validateProduct = (product) => {
+  const schema = Joi.object({
+    video: Joi.string().required(),
+    shippingAddress: Joi.object({
+      city: Joi.string().required(),
+      state: Joi.string().required(),
+    }).required(),
+    location: Joi.object({
+      city: Joi.string().required(),
+      state: Joi.string().required(),
+    }).required(),
+    title: Joi.string().required(),
+    condition: Joi.string().valid("New", "Fairly Used").required(),
+    negotiable: Joi.boolean().required(),
+    totalPrice: Joi.number().required(),
+    price: Joi.number().required(),
+    bulkPrice: Joi.object({
+      quantity: Joi.number().required(),
+      price: Joi.number().required(),
+    }).required(),
+    delivery: Joi.object({
+      city: Joi.string().required(),
+      estimatedTime: Joi.string().required(),
+    }).required(),
+    shippingOptions: Joi.array()
+      .items(
+        Joi.string().valid("Waybill", "Courier Service", "Dispatch Service")
+      )
+      .default(["Available"]),
+    categoryId: Joi.string()
+      .custom((value, helpers) => {
+        if (!mongoose.Types.ObjectId.isValid(value)) {
+          return helpers.message("Invalid category ID");
+        }
+        return value;
+      })
+      .required(),
+    subCategory: Joi.string().required(),
+    gender: Joi.string().valid("Male", "Female", "Unisex").required(),
+    color: Joi.array().required(),
+    description: Joi.string().required(),
+  });
+
+  return schema.validate(product);
+};
+
+exports.validateCategoryCreate = (data) => {
+  const schema = Joi.object({
+    name: Joi.string().required(),
+    subCategories: Joi.array().required(),
+  });
+
+  return schema.validate(data);
+};
