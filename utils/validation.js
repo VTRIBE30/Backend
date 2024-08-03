@@ -215,3 +215,47 @@ exports.validateCategoryCreate = (data) => {
 
   return schema.validate(data);
 };
+
+exports.validateProductSearchQuery = (query) => {
+  const schema = Joi.object({
+    title: Joi.string().optional(),
+    category: Joi.string().optional(),
+    subCategory: Joi.string().optional(),
+    minPrice: Joi.number().min(0).optional(),
+    maxPrice: Joi.number().min(0).optional(),
+    condition: Joi.string().valid("New", "Fairly Used").optional(),
+    location: Joi.string().optional(),
+    gender: Joi.string().valid("Male", "Female", "Unisex").optional(),
+  });
+
+  return schema.validate(query);
+};
+
+exports.vaidateProductId = (details) => {
+  const schema = Joi.object({
+    productId: Joi.string()
+      .custom((value, helpers) => {
+        if (!mongoose.Types.ObjectId.isValid(value)) {
+          return helpers.message("Invalid Product ID");
+        }
+        return value;
+      })
+      .required(),
+  });
+  return schema.validate(details);
+};
+
+exports.vaidateProductFlag = (details) => {
+  const schema = Joi.object({
+    productId: Joi.string()
+      .custom((value, helpers) => {
+        if (!mongoose.Types.ObjectId.isValid(value)) {
+          return helpers.message("Invalid Product ID");
+        }
+        return value;
+      })
+      .required(),
+    reason: Joi.string().min(5).max(500).required(),
+  });
+  return schema.validate(details);
+};
