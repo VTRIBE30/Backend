@@ -259,3 +259,17 @@ exports.vaidateProductFlag = (details) => {
   });
   return schema.validate(details);
 };
+
+exports.vaidateProductId = (details) => {
+  const schema = Joi.object({
+    productId: Joi.string()
+      .custom((value, helpers) => {
+        if (!mongoose.Types.ObjectId.isValid(value)) {
+          return helpers.message("Invalid Product ID");
+        }
+        return value;
+      })
+      .required(),
+  });
+  return schema.validate(details);
+};

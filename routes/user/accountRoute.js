@@ -13,6 +13,8 @@ const {
   editDeliveryAddress,
   deleteDeliveryAddress,
   getDeliveryAddresses,
+  getFavorites,
+  addProductToFavorites,
 } = require("../../controllers/user/accountController");
 const {
   authenticateUser,
@@ -90,6 +92,20 @@ accountRouter.delete(
   authorizeUser,
   authenticateUser,
   deleteDeliveryAddress
+);
+
+accountRouter.post(
+  "/favourite/:productId",
+  authorizeUser,
+  authenticateUser,
+  addProductToFavorites
+);
+
+accountRouter.get(
+  "/favourite/all",
+  authorizeUser,
+  authenticateUser,
+  getFavorites
 );
 
 module.exports = accountRouter;

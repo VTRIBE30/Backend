@@ -88,6 +88,12 @@ const userSchema = new mongoose.Schema(
     passcode: {
       type: String,
     },
+    favorites: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Product",
+      },
+    ],
   },
   { timestamps: true }
 );

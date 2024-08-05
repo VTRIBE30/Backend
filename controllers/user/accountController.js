@@ -1,5 +1,6 @@
 const { cloudinaryUserPfpUploader } = require("../../middlewares/cloudinary");
 const User = require("../../models/user");
+const Product = require("../../models/product");
 const { validatePassword, generateHash } = require("../../utils/bcrypt");
 const { formatWalletBalance } = require("../../utils/functions");
 const {
@@ -9,6 +10,7 @@ const {
   addAddressValidation,
   editAddressValidation,
   deleteAddressValidation,
+  vaidateProductId,
 } = require("../../utils/validation");
 
 exports.getWalletBalance = async (req, res, next) => {
@@ -404,6 +406,73 @@ exports.deleteDeliveryAddress = async (req, res, next) => {
     return res.status(200).json({
       status: true,
       message: "Delivery Address deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.addProductToFavorites = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const { productId } = req.params;
+    const { error } = vaidateProductId(req.params);
+    if (error) {
+      return res.status(400).json({
+        status: false,
+        error: error.details.map((detail) => detail.message),
+      });
+    }
+
+    // Check if the product exists
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({
+        status: false,
+        message: "Product not found",
+      });
+    }
+
+    // Check if the user already has the product in their favorites
+    const user = await User.findById(userId);
+    if (user.favorites.includes(productId)) {
+      return res.status(400).json({
+        status: false,
+        message: "Product is already in favorites",
+      });
+    }
+
+    // Add the product to the user's favorites
+    user.favorites.push(productId);
+    await user.save();
+
+    return res.status(200).json({
+      status: true,
+      message: "Product added to favorites successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getFavorites = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+
+    // Find the user and populate the favorites field with product details
+    const user = await User.findById(userId).populate('favorites');
+
+    if (!user) {
+      return res.status(404).json({
+        status: false,
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: "Favorites retrieved successfully",
+      favorites: user.favorites,
     });
   } catch (error) {
     next(error);
