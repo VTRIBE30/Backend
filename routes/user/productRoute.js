@@ -13,6 +13,9 @@ const {
   getProductDetails,
   flagProduct,
   getProductsByStatus,
+  getUserPostedProducts,
+  addReview,
+  getReviews,
 } = require("../../controllers/user/productController");
 const upload = require("../../middlewares/upload");
 
@@ -61,6 +64,41 @@ productRouter.get(
   authorizeUser,
   authenticateUser,
   getProductsByStatus
+);
+
+productRouter.get(
+  "/status/:status",
+  authorizeUser,
+  authenticateUser,
+  getProductsByStatus
+);
+
+productRouter.get(
+  "/status/:status",
+  authorizeUser,
+  authenticateUser,
+  getProductsByStatus
+);
+
+productRouter.get(
+  "/personal/all",
+  authorizeUser,
+  authenticateUser,
+  getUserPostedProducts
+);
+
+productRouter.post(
+  "/reviews/add/:productId", 
+  authorizeUser, 
+  authenticateUser, 
+  addReview
+);
+
+productRouter.get(
+  "/reviews/all", 
+  authorizeUser, 
+  authenticateUser, 
+  getReviews
 );
 
 module.exports = productRouter;

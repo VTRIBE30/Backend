@@ -42,7 +42,7 @@ const productSchema = new mongoose.Schema(
     },
     shippingOptions: {
       type: Array,
-      required: true
+      required: true,
     },
     categoryId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -63,6 +63,11 @@ const productSchema = new mongoose.Schema(
     reviews: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Review",
+    },
+    postedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
   },
   { timestamps: true }

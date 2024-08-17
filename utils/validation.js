@@ -156,6 +156,7 @@ exports.validateAppealCreation = (appeal) => {
       })
       .required(),
     subject: Joi.string().required(),
+    description: Joi.string().required(),
   });
 
   return schema.validate(appeal);
@@ -266,6 +267,107 @@ exports.vaidateProductId = (details) => {
       .custom((value, helpers) => {
         if (!mongoose.Types.ObjectId.isValid(value)) {
           return helpers.message("Invalid Product ID");
+        }
+        return value;
+      })
+      .required(),
+  });
+  return schema.validate(details);
+};
+
+exports.vaidateReview = (details) => {
+  const schema = Joi.object({
+    rating: Joi.number().min(1).max(5).required(),
+    comment: Joi.string().required(),
+    productId: Joi.string()
+      .custom((value, helpers) => {
+        if (!mongoose.Types.ObjectId.isValid(value)) {
+          return helpers.message("Invalid Product ID");
+        }
+        return value;
+      })
+      .required(),
+  });
+  return schema.validate(details);
+};
+
+exports.vaidateOrder = (details) => {
+  const orderValidationSchema = Joi.object({
+    orderQuantity: Joi.number().required(),
+    size: Joi.string().required(),
+    deliveryAddress: Joi.object({
+      firstName: Joi.string().required(),
+      lastName: Joi.string().required(),
+      phoneNumber: Joi.string().required(),
+      street: Joi.string().required(),
+      city: Joi.string().required(),
+      state: Joi.string().required(),
+    }).required(),
+    paymentOption: Joi.string()
+      .valid("Wallet Balance", "Crypto-Currency", "Bank Transfer")
+      .required(),
+    price: Joi.number().required(),
+    totalPrice: Joi.number().required(),
+    productId: Joi.string()
+      .custom((value, helpers) => {
+        if (!mongoose.Types.ObjectId.isValid(value)) {
+          return helpers.message("Invalid Product ID");
+        }
+        return value;
+      })
+      .required(),
+  });
+  return orderValidationSchema.validate(details);
+};
+
+exports.vaidateOrderId = (details) => {
+  const schema = Joi.object({
+    orderId: Joi.string()
+      .custom((value, helpers) => {
+        if (!mongoose.Types.ObjectId.isValid(value)) {
+          return helpers.message("Invalid Order ID");
+        }
+        return value;
+      })
+      .required(),
+  });
+  return schema.validate(details);
+};
+
+exports.vaidateOrderStatus = (details) => {
+  const schema = Joi.object({
+    status: Joi.string()
+      .valid("To Pay", "Paid", "Appeal", "Completed", "Failed")
+      .required(),
+  });
+  return schema.validate(details);
+};
+
+exports.vaidateMakeOffer = (details) => {
+  const schema = Joi.object({
+    offerPrice: Joi.number().required(),
+    productId: Joi.string()
+      .custom((value, helpers) => {
+        if (!mongoose.Types.ObjectId.isValid(value)) {
+          return helpers.message("Invalid Product ID");
+        }
+        return value;
+      })
+      .required(),
+  });
+  return schema.validate(details);
+};
+
+exports.vaidateRespondToOffer = (details) => {
+  const schema = Joi.object({
+    status: Joi.string()
+      .valid("Accepted", "Declined", "Pending")
+      .required(),
+    bestPrice: Joi.number().optional(),
+    offerId: Joi.string()
+      .custom((value, helpers) => {
+        if (!mongoose.Types.ObjectId.isValid(value)) {
+          return helpers.message("Invalid Offer ID");
         }
         return value;
       })

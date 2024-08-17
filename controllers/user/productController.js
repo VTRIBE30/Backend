@@ -1,12 +1,14 @@
 const { cloudinaryProdUploader } = require("../../middlewares/cloudinary");
 const Flag = require("../../models/flag");
 const Product = require("../../models/product");
+const Review = require("../../models/reviews");
 const User = require("../../models/user");
 const {
   validateProduct,
   validateProductSearchQuery,
   vaidateProductId,
   vaidateProductFlag,
+  vaidateReview,
 } = require("../../utils/validation");
 
 exports.createProduct = async (req, res, next) => {
@@ -78,6 +80,7 @@ exports.createProduct = async (req, res, next) => {
           images: uploadedImagesURL,
           description,
           color,
+          postedBy: req.user.userId,
         });
         let savedProduct = await newProduct.save();
         if (savedProduct) {
@@ -326,6 +329,86 @@ exports.getProductsByStatus = async (req, res, next) => {
       status: true,
       message: `Products with status ${status} retrieved successfully`,
       products,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getUserPostedProducts = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+
+    const products = await Product.find({ postedBy: userId });
+
+    return res.status(200).json({
+      status: true,
+      message: "User posted products retrieved successfully",
+      products,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.addReview = async (req, res, next) => {
+  try {
+    const { productId } = req.params;
+    const { error } = vaidateReview({ productId, ...req.body });
+    if (error) {
+      return res
+        .status(400)
+        .json({ status: false, error: error.details[0].message });
+    }
+
+    const { rating, comment } = req.body;
+    const userId = req.user.userId;
+
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res
+        .status(404)
+        .json({ status: false, error: "Product not found" });
+    }
+
+    const review = new Review({
+      user: userId,
+      product: productId,
+      rating,
+      comment,
+    });
+
+    await review.save();
+
+    return res.status(201).json({
+      status: true,
+      message: "Review added successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get Reviews for a Product
+exports.getReviews = async (req, res, next) => {
+  try {
+    const { productId } = req.query;
+    const { error } = vaidateProductId(req.query);
+    if (error) {
+      return res.status(400).json({
+        status: false,
+        error: error.details.map((detail) => detail.message),
+      });
+    }
+
+    const reviews = await Review.find({ product: productId })
+      .populate("user", "firstName lastName profilePic")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      status: true,
+      message: "Reviews retrieved successfully",
+      reviews,
     });
   } catch (error) {
     next(error);
