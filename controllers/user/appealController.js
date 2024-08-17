@@ -1,3 +1,4 @@
+const { cloudinaryAppealUploader } = require("../../middlewares/cloudinary");
 const Appeal = require("../../models/appeal");
 const Order = require("../../models/order");
 const { validateAppealCreation } = require("../../utils/validation");
@@ -22,7 +23,7 @@ exports.createAppeal = async (req, res, next) => {
 
     const imageFiles = req.files;
 
-    cloudinaryProdUploader(imageFiles, async (error, uploadedImagesURL) => {
+    cloudinaryAppealUploader(imageFiles, async (error, uploadedImagesURL) => {
       if (error) {
         console.error(error);
         return res.status(400).json({
@@ -48,6 +49,8 @@ exports.createAppeal = async (req, res, next) => {
         const newAppeal = new Appeal({
           orderId,
           subject,
+          description,
+          images: uploadedImagesURL,
           user: userId,
         });
 
@@ -56,7 +59,6 @@ exports.createAppeal = async (req, res, next) => {
         return res.status(201).json({
           status: true,
           message: "Appeal created successfully",
-          appeal: savedAppeal,
         });
       }
     });

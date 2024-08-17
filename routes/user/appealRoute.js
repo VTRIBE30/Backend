@@ -5,7 +5,14 @@ const { createAppeal } = require("../../controllers/user/appealController");
 const {
   authenticateUser,
 } = require("../../middlewares/authenticationMiddleware");
+const upload = require("../../middlewares/upload");
 
-appealRouter.post("/create", authorizeUser, authenticateUser, createAppeal);
+appealRouter.post(
+  "/create",
+  authorizeUser,
+  authenticateUser,
+  upload.array("images"),
+  createAppeal
+);
 
 module.exports = appealRouter;
