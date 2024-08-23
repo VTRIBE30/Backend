@@ -240,7 +240,14 @@ exports.getProductDetails = async (req, res, next) => {
     const { productId } = req.params;
     const product = await Product.findById(productId)
       .populate("categoryId")
-      .populate("reviews");
+      .populate("reviews")
+      .populate("postedBy", [
+        "business",
+        "profilePic",
+        "firstName",
+        "lastName",
+        "phoneNumber",
+      ]);
 
     if (!product) {
       return res.status(404).json({

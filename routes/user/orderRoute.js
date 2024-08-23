@@ -13,7 +13,12 @@ const {
   respondToOffer,
   getOffersMadeByUser,
   getOffersOnUserProducts,
+  shipOrder,
+  submitShippingDetails,
+  completeOrder,
 } = require("../../controllers/user/orderController");
+
+const upload = require("../../middlewares/upload");
 
 orderRouter.post(
   "/offer/:productId",
@@ -59,6 +64,28 @@ orderRouter.get(
   authorizeUser,
   authenticateUser,
   getOrdersByStatus
+);
+
+orderRouter.put(
+  "/ship/submit-details/:orderId",
+  authorizeUser,
+  authenticateUser,
+  upload.array("images"),
+  submitShippingDetails
+);
+
+orderRouter.put(
+  "/ship/:orderId",
+  authorizeUser,
+  authenticateUser,
+  shipOrder
+);
+
+orderRouter.put(
+  "/ship/complete/:orderId",
+  authorizeUser,
+  authenticateUser,
+  completeOrder
 );
 
 module.exports = orderRouter;

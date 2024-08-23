@@ -1,3 +1,4 @@
+const { cloudinaryOrderShipUploader } = require("../../middlewares/cloudinary");
 const Offer = require("../../models/offer");
 const Order = require("../../models/order");
 const Product = require("../../models/product");
@@ -8,6 +9,7 @@ const {
   vaidateOrderStatus,
   vaidateMakeOffer,
   vaidateRespondToOffer,
+  vaidateShipOrder,
 } = require("../../utils/validation");
 
 exports.placeOrder = async (req, res, next) => {
@@ -48,7 +50,7 @@ exports.placeOrder = async (req, res, next) => {
       deliveryAddress,
       paymentOption,
       totalPrice,
-      userRole: "Buyer"
+      userRole: "Buyer",
     });
 
     // Check payment option and deduct from user's wallet if applicable
@@ -111,27 +113,134 @@ exports.getOrderDetails = async (req, res, next) => {
   }
 };
 
+exports.submitShippingDetails = async (req, res, next) => {
+  try {
+    const { orderId } = req.params;
+    const { error } = vaidateShipOrder({ orderId, ...req.body });
+    if (error) {
+      return res.status(400).json({
+        status: false,
+        error: error.details.map((detail) => detail.message),
+      });
+    }
+
+    if (!req.files) {
+      return res.status(400).json({
+        status: false,
+        error: "Please add the product images",
+      });
+    }
+
+    const imageFiles = req.files;
+
+    cloudinaryOrderShipUploader(
+      imageFiles,
+      async (error, uploadedImagesURL) => {
+        if (error) {
+          console.error(error);
+          return res.status(400).json({
+            status: false,
+            message: "You've got some errors",
+            error: error?.message,
+          });
+        } else {
+          const { details, trackingNumber, deliveryFee } = req.body;
+
+          const order = await Order.findOneAndUpdate(
+            { _id: orderId },
+            {
+              $set: {
+                details: details,
+                trackingNumber: trackingNumber,
+                deliveryFee: deliveryFee,
+                images: uploadedImagesURL,
+              },
+            },
+            { new: true }
+          );
+
+          if (!order) {
+            return res
+              .status(404)
+              .json({ status: false, error: "Order not found" });
+          }
+
+          return res.status(200).json({
+            status: true,
+            message: "Order shipping details successfully added",
+          });
+        }
+      }
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.shipOrder = async (req, res, next) => {
   try {
-    const { error } = vaidateShipOrder(req.params);
-    if (error) {
-      return res
-        .status(400)
-        .json({ status: false, error: error.details[0].message });
-    }
     const { orderId } = req.params;
-    const order = await Order.findById(orderId)
-      .populate("user", "firstName lastName email")
-      .populate("product");
+    const { error } = vaidateOrderId({ orderId });
+    if (error) {
+      return res.status(400).json({
+        status: false,
+        error: error.details.map((detail) => detail.message),
+      });
+    }
+    const order = await Order.findOneAndUpdate(
+      { _id: orderId },
+      {
+        $set: {
+          status: "Shipped"
+        },
+      },
+      { new: true }
+    );
 
     if (!order) {
-      return res.status(404).json({ status: false, error: "Order not found" });
+      return res
+        .status(404)
+        .json({ status: false, error: "Order not found" });
     }
 
     return res.status(200).json({
       status: true,
-      message: "Order details retrieved successfully",
-      order,
+      message: "Order shipped successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.completeOrder = async (req, res, next) => {
+  try {
+    const { orderId } = req.params;
+    const { error } = vaidateOrderId({ orderId });
+    if (error) {
+      return res.status(400).json({
+        status: false,
+        error: error.details.map((detail) => detail.message),
+      });
+    }
+    const order = await Order.findOneAndUpdate(
+      { _id: orderId },
+      {
+        $set: {
+          status: "Completed"
+        },
+      },
+      { new: true }
+    );
+
+    if (!order) {
+      return res
+        .status(404)
+        .json({ status: false, error: "Order not found" });
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: "Order completed successfully",
     });
   } catch (error) {
     next(error);

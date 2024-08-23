@@ -360,9 +360,7 @@ exports.vaidateMakeOffer = (details) => {
 
 exports.vaidateRespondToOffer = (details) => {
   const schema = Joi.object({
-    status: Joi.string()
-      .valid("Accepted", "Declined", "Pending")
-      .required(),
+    status: Joi.string().valid("Accepted", "Declined", "Pending").required(),
     bestPrice: Joi.number().optional(),
     offerId: Joi.string()
       .custom((value, helpers) => {
@@ -373,5 +371,41 @@ exports.vaidateRespondToOffer = (details) => {
       })
       .required(),
   });
+  return schema.validate(details);
+};
+
+exports.vaidateShipOrder = (details) => {
+  const schema = Joi.object({
+    details: Joi.string().required(),
+    trackingNumber: Joi.string().required(),
+    deliveryFee: Joi.number().required(),
+    orderId: Joi.string()
+      .custom((value, helpers) => {
+        if (!mongoose.Types.ObjectId.isValid(value)) {
+          return helpers.message("Invalid Order ID");
+        }
+        return value;
+      })
+      .required(),
+  });
+  return schema.validate(details);
+};
+
+exports.validateFeedPost = (details) => {
+  const schema = Joi.object({
+    caption: Joi.string().max(250).required().messages({
+      "string.max": "Caption must be 250 words or less",
+    }),
+    mediaType: Joi.string().valid("image", "video").required(),
+    productId: Joi.string()
+      .custom((value, helpers) => {
+        if (!mongoose.Types.ObjectId.isValid(value)) {
+          return helpers.message("Invalid Product ID");
+        }
+        return value;
+      })
+      .required(),
+  });
+
   return schema.validate(details);
 };
