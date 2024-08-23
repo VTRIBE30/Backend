@@ -6,7 +6,7 @@ const {
 } = require("../../middlewares/authenticationMiddleware");
 
 const upload = require("../../middlewares/upload");
-const { createFeedPost } = require("../../controllers/user/feedController");
+const { createFeedPost, searchFeeds } = require("../../controllers/user/feedController");
 
 feedRouter.post(
   "/create",
@@ -20,7 +20,7 @@ feedRouter.post(
   "/search",
   authorizeUser,
   authenticateUser,
-  createFeedPost
+  searchFeeds
 );
 
 module.exports = feedRouter;
