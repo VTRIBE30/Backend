@@ -409,3 +409,36 @@ exports.validateFeedPost = (details) => {
 
   return schema.validate(details);
 };
+
+exports.validateLikeFeedPost = (details) => {
+  const schema = Joi.object({
+    feedPostId: Joi.string()
+      .custom((value, helpers) => {
+        if (!mongoose.Types.ObjectId.isValid(value)) {
+          return helpers.message("Invalid Feed Post ID");
+        }
+        return value;
+      })
+      .required(),
+  });
+
+  return schema.validate(details);
+};
+
+exports.validateCommentFeedPost = (details) => {
+  const schema = Joi.object({
+    content: Joi.string().max(250).required().messages({
+      "string.max": "Caption must be 250 words or less",
+    }),
+    feedPostId: Joi.string()
+      .custom((value, helpers) => {
+        if (!mongoose.Types.ObjectId.isValid(value)) {
+          return helpers.message("Invalid Feed Post ID");
+        }
+        return value;
+      })
+      .required(),
+  });
+
+  return schema.validate(details);
+};

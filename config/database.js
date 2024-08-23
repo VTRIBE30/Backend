@@ -4,10 +4,7 @@ const dbURI = process.env.dbURI;
 
 const dbConnection = () => {
   mongoose
-    .connect(dbURI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    })
+    .connect(dbURI)
     .then(() => {
         console.log('Mongodb database connected');
     })
