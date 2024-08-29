@@ -50,6 +50,7 @@ exports.getUserProfile = async (req, res, next) => {
       status: true,
       message: "User details retrieved successfully",
       user: {
+        _id: user?._id,
         firstName: user?.firstName,
         lastName: user?.lastName,
         email: user?.email,

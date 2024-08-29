@@ -1,4 +1,4 @@
-const Business = require("../../models/business");
+const { cloudinaryChatImageUploader } = require("../../middlewares/cloudinary");
 const Chat = require("../../models/chat");
 const Message = require("../../models/message");
 const User = require("../../models/user");
@@ -21,14 +21,17 @@ exports.startChat = async (req, res, next) => {
     const { senderId, receiverId } = req.query;
 
     const sender = await User.findById(senderId);
-    const receiver = await Business.findById(receiverId);
+    const receiver = await User.findById(receiverId);
 
     if (!sender || !receiver) {
-      return res.status(404).json({ message: "sender or Business not found" });
+      return res.status(404).json({ message: "sender or receiver not found" });
     }
 
     // Check if a chat already exists between the user and the receiver
-    let chat = await Chat.findOne({ sender: sender._id, receiver: receiver._id });
+    let chat = await Chat.findOne({
+      sender: sender._id,
+      receiver: receiver._id,
+    });
 
     if (!chat) {
       chat = new Chat({ sender: sender._id, receiver: receiver._id });
@@ -62,28 +65,69 @@ exports.sendMessage = async (req, res, next) => {
         error: error.details.map((detail) => detail.message),
       });
     }
-    const chat = await Chat.findById(chatId);
-    const sender = await User.findById(senderId);
 
-    if (!chat || !sender) {
-      return res.status(404).json({ message: "Chat or Sender not found" });
+    if (req.file) {
+      const imageFile = req.file.path;
+      cloudinaryChatImageUploader(imageFile, async (error, uploadedImageUrl) => {
+        if (error) {
+          console.error(error);
+          return res.status(400).json({
+            status: false,
+            message: "You've got some errors",
+            error: error?.message,
+          });
+        } else {
+          const chat = await Chat.findById(chatId);
+          const sender = await User.findById(senderId);
+
+          if (!chat || !sender) {
+            return res
+              .status(404)
+              .json({ message: "Chat or Sender not found" });
+          }
+
+          const message = new Message({
+            chat: chat._id,
+            sender: sender._id,
+            content,
+            image: uploadedImageUrl.secure_url
+          });
+          await message.save();
+
+          chat.messages.push(message._id);
+          chat.lastUpdated = Date.now();
+          await chat.save();
+
+          return res.status(200).json({
+            status: true,
+            message,
+          });
+        }
+      });
+    } else {
+      const chat = await Chat.findById(chatId);
+      const sender = await User.findById(senderId);
+
+      if (!chat || !sender) {
+        return res.status(404).json({ message: "Chat or Sender not found" });
+      }
+
+      const message = new Message({
+        chat: chat._id,
+        sender: sender._id,
+        content,
+      });
+      await message.save();
+
+      chat.messages.push(message._id);
+      chat.lastUpdated = Date.now();
+      await chat.save();
+
+      return res.status(200).json({
+        status: true,
+        message,
+      });
     }
-
-    const message = new Message({
-      chat: chat._id,
-      sender: sender._id,
-      content,
-    });
-    await message.save();
-
-    chat.messages.push(message._id);
-    chat.lastUpdated = Date.now();
-    await chat.save();
-
-    return res.status(200).json({
-      status: true,
-      message,
-    });
   } catch (error) {
     next(error);
   }

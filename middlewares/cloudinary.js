@@ -14,6 +14,20 @@ function cloudinaryUserPfpUploader(imagePath, callback) {
   );
 }
 
+function cloudinaryChatImageUploader(imagePath, callback) {
+  cloudinary.uploader.upload(
+    imagePath,
+    { folder: "vtribe/users/chat" },
+    function (error, result) {
+      if (error) {
+        callback(error, null);
+      } else {
+        callback(null, result);
+      }
+    }
+  );
+}
+
 function cloudinaryProdUploader(images, callback) {
   const uploadedImagesURL = [];
   let completedCount = 0;
@@ -114,5 +128,11 @@ function cloudinaryFeedMediaUploader(media, callback) {
   });
 }
 
-
-module.exports = { cloudinaryUserPfpUploader, cloudinaryProdUploader, cloudinaryAppealUploader, cloudinaryOrderShipUploader, cloudinaryFeedMediaUploader };
+module.exports = {
+  cloudinaryUserPfpUploader,
+  cloudinaryProdUploader,
+  cloudinaryAppealUploader,
+  cloudinaryOrderShipUploader,
+  cloudinaryFeedMediaUploader,
+  cloudinaryChatImageUploader,
+};

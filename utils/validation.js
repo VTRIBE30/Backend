@@ -466,7 +466,7 @@ exports.validateStartChat = (details) => {
         }
         return value;
       })
-      .require(),
+      .required(),
     receiverId: Joi.string()
       .custom((value, helpers) => {
         if (!mongoose.Types.ObjectId.isValid(value)) {
