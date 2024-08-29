@@ -114,6 +114,10 @@ exports.getAllProducts = async (req, res, next) => {
   try {
     const products = await Product.find()
       .populate("categoryId")
+      .populate({
+        path: "postedBy",
+        select: "business _id email profilePic firstName gender lastName phoneNumber",
+      })
       .populate("reviews");
 
     return res.status(200).json({
