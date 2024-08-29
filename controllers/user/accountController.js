@@ -12,6 +12,7 @@ const {
   deleteAddressValidation,
   vaidateProductId,
 } = require("../../utils/validation");
+const Notification = require("../../models/notification");
 
 exports.getWalletBalance = async (req, res, next) => {
   try {
@@ -461,7 +462,7 @@ exports.getFavorites = async (req, res, next) => {
     const userId = req.user.userId;
 
     // Find the user and populate the favorites field with product details
-    const user = await User.findById(userId).populate('favorites');
+    const user = await User.findById(userId).populate("favorites");
 
     if (!user) {
       return res.status(404).json({
@@ -475,6 +476,20 @@ exports.getFavorites = async (req, res, next) => {
       message: "Favorites retrieved successfully",
       favorites: user.favorites,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getNotifications = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+
+    const notifications = await Notification.find({ userId }).sort({
+      createdAt: -1,
+    });
+
+    res.status(200).json({ status: true, notifications });
   } catch (error) {
     next(error);
   }

@@ -15,6 +15,7 @@ const {
   getDeliveryAddresses,
   getFavorites,
   addProductToFavorites,
+  getNotifications,
 } = require("../../controllers/user/accountController");
 const {
   authenticateUser,
@@ -106,6 +107,13 @@ accountRouter.get(
   authorizeUser,
   authenticateUser,
   getFavorites
+);
+
+accountRouter.get(
+  "/notifications/all",
+  authorizeUser,
+  authenticateUser,
+  getNotifications
 );
 
 module.exports = accountRouter;
