@@ -13,7 +13,21 @@ const {
 
 exports.createProduct = async (req, res, next) => {
   try {
-    const { error } = validateProduct(req.body);
+    // console.log(req.files);
+    const transformedFiles = req.files.map((file) => ({
+      fieldname: file.fieldname,
+      originalname: file.originalname,
+      mimetype: file.mimetype,
+      path: file.path,
+      size: file.size,
+    }));
+
+    const productData = {
+      ...req.body,
+      files: transformedFiles, // Attach transformed files
+    };
+
+    const { error } = validateProduct(productData);
     if (error) {
       return res.status(400).json({
         status: false,

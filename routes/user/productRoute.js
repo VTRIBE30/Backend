@@ -23,7 +23,7 @@ productRouter.post(
   "/create",
   authorizeUser,
   authenticateUser,
-  upload.any(),
+  upload.array("images"),
   createProduct
 );
 
@@ -88,17 +88,12 @@ productRouter.get(
 );
 
 productRouter.post(
-  "/reviews/add/:productId", 
-  authorizeUser, 
-  authenticateUser, 
+  "/reviews/add/:productId",
+  authorizeUser,
+  authenticateUser,
   addReview
 );
 
-productRouter.get(
-  "/reviews/all", 
-  authorizeUser, 
-  authenticateUser, 
-  getReviews
-);
+productRouter.get("/reviews/all", authorizeUser, authenticateUser, getReviews);
 
 module.exports = productRouter;

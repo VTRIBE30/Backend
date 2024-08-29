@@ -13,6 +13,7 @@ const categoryRouter = require("./routes/user/categoryRoute");
 const productRouter = require("./routes/user/productRoute");
 const orderRouter = require("./routes/user/orderRoute");
 const feedRouter = require("./routes/user/feedRoute");
+const chatRouter = require("./routes/user/chatRouter");
 
 // Main Routes
 app.use(mainRouter);
@@ -25,6 +26,7 @@ app.use("/v1/user/category", categoryRouter);
 app.use("/v1/user/product", productRouter);
 app.use("/v1/user/order", orderRouter);
 app.use("/v1/user/feed", feedRouter);
+app.use("/v1/user/chat", chatRouter);
 
 // Admin Routes
 app.use("/v1/admin/category", adminRouter);

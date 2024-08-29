@@ -1,5 +1,5 @@
 const multer = require("multer");
-const path = require('path');
+const path = require("path");
 
 const storage = multer.diskStorage({
   filename: (req, file, cb) => {
@@ -15,7 +15,12 @@ function fileFilter(req, file, cb) {
   if (mimetype && extname) {
     return cb(null, true);
   } else {
-    cb(new Error("Only images and videos 'jpeg, jpg, png, mp4' are allowed!"));
+    return cb(
+      new multer.MulterError(
+        "LIMIT_UNEXPECTED_FILE",
+        "Invalid file type. Only 'jpeg, jpg, png, mp4' are allowed!"
+      )
+    );
   }
 }
 

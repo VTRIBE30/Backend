@@ -203,6 +203,20 @@ exports.validateProduct = (product) => {
     gender: Joi.string().valid("Male", "Female", "Unisex").required(),
     color: Joi.array().required(),
     description: Joi.string().required(),
+    files: Joi.array()
+      .items(
+        Joi.object({
+          fieldname: Joi.string().required(),
+          originalname: Joi.string().required(),
+          mimetype: Joi.string()
+            .valid("image/jpeg", "image/png", "video/mp4")
+            .required(), // Validating MIME type
+          path: Joi.string().required(),
+          size: Joi.number().required(),
+        })
+      )
+      .min(1) // At least one file is required
+      .required(),
   });
 
   return schema.validate(product);
@@ -440,5 +454,64 @@ exports.validateCommentFeedPost = (details) => {
       .required(),
   });
 
+  return schema.validate(details);
+};
+
+exports.validateStartChat = (details) => {
+  const schema = Joi.object({
+    senderId: Joi.string()
+      .custom((value, helpers) => {
+        if (!mongoose.Types.ObjectId.isValid(value)) {
+          return helpers.message("Invalid user ID");
+        }
+        return value;
+      })
+      .require(),
+    receiverId: Joi.string()
+      .custom((value, helpers) => {
+        if (!mongoose.Types.ObjectId.isValid(value)) {
+          return helpers.message("Invalid user ID");
+        }
+        return value;
+      })
+      .required(),
+  });
+  return schema.validate(details);
+};
+
+exports.validateSendMessage = (details) => {
+  const schema = Joi.object({
+    senderId: Joi.string()
+      .custom((value, helpers) => {
+        if (!mongoose.Types.ObjectId.isValid(value)) {
+          return helpers.message("Invalid sender ID");
+        }
+        return value;
+      })
+      .required(),
+    chatId: Joi.string()
+      .custom((value, helpers) => {
+        if (!mongoose.Types.ObjectId.isValid(value)) {
+          return helpers.message("Invalid chat ID");
+        }
+        return value;
+      })
+      .required(),
+    content: Joi.string().required(),
+  });
+  return schema.validate(details);
+};
+
+exports.validateGetMessages = (details) => {
+  const schema = Joi.object({
+    chatId: Joi.string()
+      .custom((value, helpers) => {
+        if (!mongoose.Types.ObjectId.isValid(value)) {
+          return helpers.message("Invalid chat ID");
+        }
+        return value;
+      })
+      .required(),
+  });
   return schema.validate(details);
 };
