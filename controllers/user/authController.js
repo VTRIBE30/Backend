@@ -17,6 +17,7 @@ const {
   sendOTPRequest,
   sendPasswordResetEmail,
 } = require("../../services/email");
+const { sendNotification } = require("../../services/notification");
 
 // Instatiating jwt helper
 const jwt = new JWT();
@@ -213,14 +214,14 @@ exports.signIn = async (req, res, next) => {
       user.phoneNumber
     );
 
-    // const templateData = {
-    //   userId: user._id,
-    //   title: "Security Alert",
-    //   body: "We noticed a recent login to your account, if you were not the one, please reset your password",
-    //   type: "SECURITY_ALERT",
-    // };
+    const templateData = {
+      userId: user._id,
+      title: "Security Alert",
+      body: "We noticed a recent login to your account, if you were not the one, please reset your password",
+      type: "SECURITY_ALERT",
+    };
 
-    // await sendNotification(token, templateData);
+    await sendNotification(templateData, next);
 
     // await sendLoginAlert(user.email);
 
@@ -314,7 +315,7 @@ exports.verifyOtp = async (req, res, next) => {
       message: "OTP verrified successful",
     });
   } catch (error) {
-    next(error)
+    next(error);
   }
 };
 
@@ -366,7 +367,7 @@ exports.resetPassword = async (req, res, next) => {
       message: "Password reset successful",
     });
   } catch (error) {
-    next()
+    next();
   }
 };
 
