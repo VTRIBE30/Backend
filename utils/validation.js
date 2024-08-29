@@ -209,7 +209,7 @@ exports.validateProduct = (product) => {
           fieldname: Joi.string().required(),
           originalname: Joi.string().required(),
           mimetype: Joi.string()
-            .valid("image/jpeg", "image/png", "video/mp4")
+            .valid("image/jpeg", "image/jpg", "image/png", "video/mp4")
             .required(), // Validating MIME type
           path: Joi.string().required(),
           size: Joi.number().required(),
