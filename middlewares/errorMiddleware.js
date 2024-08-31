@@ -1,7 +1,7 @@
 const multer = require('multer');
 
 const errorMiddleware = (err, req, res, next) => {
-  // console.error(err); // Log the error for debugging purposes
+  console.error(err); // Log the error for debugging purposes
 
   // Default error response
   const statusCode = err.statusCode || 500;

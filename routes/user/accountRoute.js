@@ -16,11 +16,27 @@ const {
   getFavorites,
   addProductToFavorites,
   getNotifications,
+  initializeFunding,
+  verifyFunding,
 } = require("../../controllers/user/accountController");
 const {
   authenticateUser,
 } = require("../../middlewares/authenticationMiddleware");
 const upload = require("../../middlewares/upload");
+
+accountRouter.post(
+  "/wallet/fund/initiate",
+  authorizeUser,
+  authenticateUser,
+  initializeFunding
+);
+
+accountRouter.post(
+  "/wallet/fund/verify",
+  authorizeUser,
+  authenticateUser,
+  verifyFunding
+);
 
 accountRouter.get(
   "/wallet/balance",

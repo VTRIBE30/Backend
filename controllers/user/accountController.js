@@ -11,8 +11,107 @@ const {
   editAddressValidation,
   deleteAddressValidation,
   vaidateProductId,
+  validateInitiateFunding,
+  validateVerifyFunding,
 } = require("../../utils/validation");
 const Notification = require("../../models/notification");
+const axios = require("axios");
+
+// Initialize payment endpoint
+exports.initializeFunding = async (req, res, next) => {
+  try {
+    const { error } = validateInitiateFunding(req.body);
+    if (error) {
+      return res.status(400).json({
+        status: false,
+        message: "Validation error",
+        error: error.details[0].message,
+      });
+    }
+
+    const userId = req.user.userId;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ status: false, error: "User not found" });
+    }
+
+    const { amount } = req.body;
+
+    // Convert the amount to kobo (smallest currency unit)
+    const paystackAmount = amount * 100;
+
+    const paystackResponse = await axios.post(
+      "https://api.paystack.co/transaction/initialize",
+      {
+        email: user?.email,
+        amount: paystackAmount,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+        },
+      }
+    );
+
+    // Send the authorization URL to the client
+    res.status(200).json({
+      status: true,
+      message: "Payment initialized successfully",
+      payment: {
+        authorizationUrl: paystackResponse.data.data.authorization_url,
+        reference: paystackResponse.data.data.reference,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Verify payment endpoint
+exports.verifyFunding = async (req, res, next) => {
+  try {
+    const { error } = validateVerifyFunding(req.query);
+    if (error) {
+      return res.status(400).json({
+        status: false,
+        message: "Validation error",
+        error: error.details[0].message,
+      });
+    }
+    const { reference } = req.query;
+
+    const paystackResponse = await axios.get(
+      `https://api.paystack.co/transaction/verify/${reference}`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+        },
+      }
+    );    
+
+    const transaction = paystackResponse.data.data;
+    console.log(transaction.status);
+
+    if (transaction.status === "success") {
+      // Update user's wallet balance (pseudo code, replace with actual implementation)
+      // await updateWalletBalance(transaction.customer.email, transaction.amount);
+
+      return res.status(200).json({
+        status: true,
+        message: "Payment verified successfully",
+        transaction,
+      });
+    } else {
+      return res.status(400).json({
+        status: false,
+        message: "Payment not successful",
+      });
+    }
+  } catch (error) {
+    next(error)
+  }
+};
 
 exports.getWalletBalance = async (req, res, next) => {
   try {

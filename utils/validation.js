@@ -515,3 +515,17 @@ exports.validateGetMessages = (details) => {
   });
   return schema.validate(details);
 };
+
+exports.validateInitiateFunding = (details) => {
+  const schema = Joi.object({
+    amount: Joi.number().positive().greater(999.99).required(),
+  });
+  return schema.validate(details);
+};
+
+exports.validateVerifyFunding = (details) => {
+  const schema = Joi.object({
+    reference: Joi.string().required(),
+  });
+  return schema.validate(details);
+};
