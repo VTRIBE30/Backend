@@ -16,6 +16,9 @@ const {
 } = require("../../utils/validation");
 const Notification = require("../../models/notification");
 const axios = require("axios");
+const Wallet = require("../../models/wallet");
+const { sendNotification } = require("../../services/notification");
+const Transaction = require("../../models/transaction");
 
 // Initialize payment endpoint
 exports.initializeFunding = async (req, res, next) => {
@@ -46,6 +49,12 @@ exports.initializeFunding = async (req, res, next) => {
       {
         email: user?.email,
         amount: paystackAmount,
+        metadata: {
+          userId: userId,
+          first_name: user?.firstName,
+          last_name: user?.lastName,
+          phone: user?.phoneNumber,
+        },
       },
       {
         headers: {
@@ -53,6 +62,28 @@ exports.initializeFunding = async (req, res, next) => {
         },
       }
     );
+
+    const templateData = {
+      userId: user._id,
+      title: "Wallet Funding",
+      body: `You just initiated a wallet fund of ₦${amount}, Please complete your payment...`,
+      type: "ACCOUNT_ACTIVITY",
+    };
+
+    await sendNotification(templateData, next);
+
+    // Create transaction record
+    const transaction = new Transaction({
+      wallet: user.walletId,
+      sender: user._id,
+      recipient: user._id,
+      amount: parseFloat(amount),
+      transactionId: "VTRIBE_TX_" + paystackResponse.data.data.reference,
+      transactionType: "Wallet Funding",
+      description: "Funded wallet with paystack",
+    });
+
+    await transaction.save();
 
     // Send the authorization URL to the client
     res.status(200).json({
@@ -71,6 +102,7 @@ exports.initializeFunding = async (req, res, next) => {
 // Verify payment endpoint
 exports.verifyFunding = async (req, res, next) => {
   try {
+    // Validate request query parameters
     const { error } = validateVerifyFunding(req.query);
     if (error) {
       return res.status(400).json({
@@ -79,8 +111,10 @@ exports.verifyFunding = async (req, res, next) => {
         error: error.details[0].message,
       });
     }
+
     const { reference } = req.query;
 
+    // Send verification request to Paystack
     const paystackResponse = await axios.get(
       `https://api.paystack.co/transaction/verify/${reference}`,
       {
@@ -88,14 +122,44 @@ exports.verifyFunding = async (req, res, next) => {
           Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
         },
       }
-    );    
+    );
 
-    const transaction = paystackResponse.data.data;
-    console.log(transaction.status);
+    // Check if the response indicates a failed status
+    if (!paystackResponse.data.status) {
+      return res.status(400).json({
+        status: false,
+        message: paystackResponse.data.message || "Invalid transaction reference",
+      });
+    }
 
-    if (transaction.status === "success") {
-      // Update user's wallet balance (pseudo code, replace with actual implementation)
-      // await updateWalletBalance(transaction.customer.email, transaction.amount);
+    const paymentData = paystackResponse.data.data;
+    console.log(paymentData);
+
+    // Check if the transaction was successful
+    if (paymentData.status === "success") {
+      // Find the wallet based on the userId stored in metadata
+      const wallet = await Wallet.findOne({
+        userId: paymentData?.metadata?.userId,
+      });
+
+      if (!wallet) {
+        return res.status(404).json({
+          status: false,
+          message: "User wallet not found",
+        });
+      }
+
+      const chargeAmount = 0.05; // Example charge rate
+      const newAmount = (parseFloat(paymentData.amount) / 100) * chargeAmount;
+      wallet.balance += parseFloat(newAmount);
+      await wallet.save();
+
+      // Update the transaction record
+      const transaction = await Transaction.findOneAndUpdate(
+        { reference },
+        { transactionStatus: "Successful" },
+        { new: true }
+      );
 
       return res.status(200).json({
         status: true,
@@ -103,13 +167,33 @@ exports.verifyFunding = async (req, res, next) => {
         transaction,
       });
     } else {
+      // Handle cases where the transaction status is not successful
       return res.status(400).json({
         status: false,
         message: "Payment not successful",
       });
     }
   } catch (error) {
-    next(error)
+    // Handle Axios errors specifically
+    if (error.response) {
+      const statusCode = error.response.status || 500;
+      const errorMessage = error.response.data.message || "Error verifying payment";
+
+      console.error("Error response from Paystack:", {
+        status: statusCode,
+        message: errorMessage,
+        data: error.response.data,
+      });
+
+      return res.status(statusCode).json({
+        status: false,
+        message: errorMessage,
+      });
+    }
+
+    // For unexpected errors, log and pass to the error middleware
+    console.error("Unexpected error:", error);
+    next(error);
   }
 };
 
