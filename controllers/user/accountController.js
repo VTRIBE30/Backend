@@ -112,6 +112,7 @@ exports.verifyFunding = async (req, res, next) => {
       });
     }
 
+    const userId = req.user.userId;
     const { reference } = req.query;
 
     // Send verification request to Paystack
@@ -163,6 +164,15 @@ exports.verifyFunding = async (req, res, next) => {
         { transactionStatus: "Successful" },
         { new: true }
       );
+
+      const templateData = {
+        userId: userId,
+        title: "Wallet Funding",
+        body: `Your deposit of ₦${transaction.amount} was successful`,
+        type: "ACCOUNT_ACTIVITY",
+      };
+  
+      await sendNotification(templateData, next);
 
       return res.status(200).json({
         status: true,
