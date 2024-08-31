@@ -128,7 +128,8 @@ exports.verifyFunding = async (req, res, next) => {
     if (!paystackResponse.data.status) {
       return res.status(400).json({
         status: false,
-        message: paystackResponse.data.message || "Invalid transaction reference",
+        message:
+          paystackResponse.data.message || "Invalid transaction reference",
       });
     }
 
@@ -150,13 +151,15 @@ exports.verifyFunding = async (req, res, next) => {
       }
 
       const chargeAmount = 0.05; // Example charge rate
-      const newAmount = (parseFloat(paymentData.amount) / 100) * chargeAmount;
+      const newAmount =
+        parseFloat(paymentData.amount) / 100 -
+        (parseFloat(paymentData.amount) / 100) * chargeAmount;
       wallet.balance += parseFloat(newAmount);
       await wallet.save();
 
       // Update the transaction record
       const transaction = await Transaction.findOneAndUpdate(
-        { transactionId: new RegExp(`^VTRIBE_TX_${reference}$`, "i"), },
+        { transactionId: new RegExp(`^VTRIBE_TX_${reference}$`, "i") },
         { transactionStatus: "Successful" },
         { new: true }
       );
@@ -177,7 +180,8 @@ exports.verifyFunding = async (req, res, next) => {
     // Handle Axios errors specifically
     if (error.response) {
       const statusCode = error.response.status || 500;
-      const errorMessage = error.response.data.message || "Error verifying payment";
+      const errorMessage =
+        error.response.data.message || "Error verifying payment";
 
       console.error("Error response from Paystack:", {
         status: statusCode,
