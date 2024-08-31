@@ -156,7 +156,7 @@ exports.verifyFunding = async (req, res, next) => {
 
       // Update the transaction record
       const transaction = await Transaction.findOneAndUpdate(
-        { reference },
+        { transactionId: new RegExp(`^VTRIBE_TX_${reference}$`, "i"), },
         { transactionStatus: "Successful" },
         { new: true }
       );
