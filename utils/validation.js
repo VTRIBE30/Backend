@@ -203,20 +203,6 @@ exports.validateProduct = (product) => {
     gender: Joi.string().valid("Male", "Female", "Unisex").required(),
     color: Joi.array().required(),
     description: Joi.string().required(),
-    files: Joi.array()
-      .items(
-        Joi.object({
-          fieldname: Joi.string().required(),
-          originalname: Joi.string().required(),
-          mimetype: Joi.string()
-            .valid("image/jpeg", "image/jpg", "image/png", "video/mp4")
-            .required(), // Validating MIME type
-          path: Joi.string().required(),
-          size: Joi.number().required(),
-        })
-      )
-      .min(1) // At least one file is required
-      .required(),
   });
 
   return schema.validate(product);
