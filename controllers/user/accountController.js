@@ -691,3 +691,49 @@ exports.getNotifications = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.retrieveTransactionDetails = async (req, res, next) => {
+  try {
+    const { transactionId } = req.params;
+
+    // Query the database for the transaction details
+    const transaction = await Transaction.findOne({ transactionId });
+
+    if (!transaction) {
+      return res
+        .status(404)
+        .json({ status: false, error: "Transaction not found" });
+    }
+
+    // Return the transaction details to the client
+    return res.status(200).json({ status: true, data: transaction });
+  } catch (error) {
+    next(error)
+  }
+};
+
+exports.fetchTransactionHistory = async (req, res, next) => {
+  try {
+    const userId = req.params.userId;
+
+    // Check if the requested user matches the authenticated user
+    if (req.user.userId !== userId) {
+      return res
+        .status(403)
+        .json({ status: false, error: "Unauthorized access" });
+    }
+
+    // Fetch transaction history for the specified user
+    const transactions = await Transaction.find({
+      $or: [{ sender: userId }, { recipient: userId }],
+    })
+      .populate("wallet")
+      .populate("sender", 'firstName lastName')
+      .populate("recipient", 'firstName lastName')
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({ status: true, transactions });
+  } catch (error) {
+    next(error)
+  }
+};

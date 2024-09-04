@@ -18,6 +18,8 @@ const {
   getNotifications,
   initializeFunding,
   verifyFunding,
+  retrieveTransactionDetails,
+  fetchTransactionHistory,
 } = require("../../controllers/user/accountController");
 const {
   authenticateUser,
@@ -130,6 +132,20 @@ accountRouter.get(
   authorizeUser,
   authenticateUser,
   getNotifications
+);
+
+accountRouter.get(
+  "/transactions/all/:userId",
+  authorizeUser,
+  authenticateUser,
+  fetchTransactionHistory
+);
+
+accountRouter.get(
+  "/transactions/:transactionId",
+  authorizeUser,
+  authenticateUser,
+  retrieveTransactionDetails
 );
 
 module.exports = accountRouter;
