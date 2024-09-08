@@ -337,7 +337,7 @@ exports.vaidateOrderId = (details) => {
 exports.vaidateOrderStatus = (details) => {
   const schema = Joi.object({
     status: Joi.string()
-      .valid("To Pay", "Paid", "Appeal", "Completed", "Failed")
+      .valid("Pending", "Paid", "Appeal", "Shipped", "Completed", "Cancelled")
       .required(),
   });
   return schema.validate(details);
