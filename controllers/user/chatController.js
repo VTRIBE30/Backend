@@ -160,3 +160,47 @@ exports.getMessages = async (req, res, next) => {
     next(error);
   }
 };
+
+// Fetch recent chats
+exports.getRecentChats = async (req, res, next) => {
+  try {
+    const userId = req.user.userId; // Assuming req.user is populated with the authenticated user's data
+
+    // Fetch recent chats involving the user either as sender or receiver, sorted by the last updated time
+    const recentChats = await Chat.find({
+      $or: [{ sender: userId }, { receiver: userId }],
+    })
+      .sort({ lastUpdated: -1 }) // Sort chats by the last update time, most recent first
+      .populate({
+        path: 'messages',
+        options: { sort: { createdAt: -1 }, limit: 1 }, // Get the latest message in each chat
+        populate: { path: 'sender', select: 'firstName lastName profilePic' }, // Populate sender details of the message
+      })
+      .populate('sender receiver', 'firstName lastName profilePic'); // Populate sender and receiver details
+
+    // Format the response to include the necessary details
+    const formattedChats = recentChats.map((chat) => {
+      const lastMessage = chat.messages[0]; // The latest message in the chat
+      const otherUser =
+        chat.sender._id.toString() === userId ? chat.receiver : chat.sender; // Determine the other user in the chat
+
+      return {
+        userId: otherUser._id,
+        firstName: otherUser.firstName,
+        lastName: otherUser.lastName,
+        profilePic: otherUser.profilePic,
+        lastMessage: lastMessage ? lastMessage.content : '',
+        lastSender: lastMessage ? lastMessage.sender.firstName : '',
+        lastTimestamp: lastMessage ? lastMessage.createdAt : chat.lastUpdated,
+      };
+    });
+
+    return res.status(200).json({
+      status: true,
+      message: 'Recent chats fetched successfully',
+      data: formattedChats,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

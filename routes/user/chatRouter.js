@@ -8,8 +8,11 @@ const {
   startChat,
   getMessages,
   sendMessage,
+  getRecentChats,
 } = require("../../controllers/user/chatController");
 const upload = require("../../middlewares/upload");
+
+chatRouter.get("/recents", authorizeUser, authenticateUser, getRecentChats);
 
 chatRouter.post("/start", authorizeUser, authenticateUser, startChat);
 
