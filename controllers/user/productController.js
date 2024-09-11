@@ -134,7 +134,7 @@ exports.getProductsBySeller = async (req, res, next) => {
 
     return res.status(200).json({
       status: true,
-      message: "Products retrieved successfully",
+      message: "Seller products retrieved successfully",
       products,
     });
   } catch (error) {
