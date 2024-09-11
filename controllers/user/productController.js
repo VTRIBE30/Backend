@@ -9,6 +9,7 @@ const {
   vaidateProductId,
   vaidateProductFlag,
   vaidateReview,
+  vaidateSellerId,
 } = require("../../utils/validation");
 
 exports.createProduct = async (req, res, next) => {
@@ -105,6 +106,30 @@ exports.getAllProducts = async (req, res, next) => {
         path: "postedBy",
         select: "business _id email profilePic firstName gender lastName phoneNumber",
       })
+      .populate("reviews");
+
+    return res.status(200).json({
+      status: true,
+      message: "Products retrieved successfully",
+      products,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getProductsBySeller = async (req, res, next) => {
+  try {
+    const { error } = vaidateSellerId(req.params);
+    if (error) {
+      return res.status(400).json({
+        status: false,
+        error: error.details.map((detail) => detail.message),
+      });
+    }
+    const { sellerId } = req.params;
+    const products = await Product.find({ postedBy: sellerId })
+      .populate("categoryId")
       .populate("reviews");
 
     return res.status(200).json({

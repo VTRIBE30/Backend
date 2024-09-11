@@ -16,6 +16,7 @@ const {
   getUserPostedProducts,
   addReview,
   getReviews,
+  getProductsBySeller,
 } = require("../../controllers/user/productController");
 const upload = require("../../middlewares/upload");
 
@@ -34,6 +35,13 @@ productRouter.get(
   authorizeUser,
   authenticateUser,
   getProductsByCategory
+);
+
+productRouter.get(
+  "/seller/:sellerId",
+  authorizeUser,
+  authenticateUser,
+  getProductsBySeller
 );
 
 productRouter.get(

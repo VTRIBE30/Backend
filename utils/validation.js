@@ -334,6 +334,20 @@ exports.vaidateOrderId = (details) => {
   return schema.validate(details);
 };
 
+exports.vaidateSellerId = (details) => {
+  const schema = Joi.object({
+    sellerId: Joi.string()
+      .custom((value, helpers) => {
+        if (!mongoose.Types.ObjectId.isValid(value)) {
+          return helpers.message("Invalid Seller ID");
+        }
+        return value;
+      })
+      .required(),
+  });
+  return schema.validate(details);
+};
+
 exports.vaidateOrderStatus = (details) => {
   const schema = Joi.object({
     status: Joi.string()
