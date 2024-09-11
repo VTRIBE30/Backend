@@ -14,7 +14,6 @@ const {
 
 exports.createProduct = async (req, res, next) => {
   try {
-
     const { error } = validateProduct(req.body);
     if (error) {
       return res.status(400).json({
@@ -104,7 +103,8 @@ exports.getAllProducts = async (req, res, next) => {
       .populate("categoryId")
       .populate({
         path: "postedBy",
-        select: "business _id email profilePic firstName gender lastName phoneNumber",
+        select:
+          "business _id email profilePic firstName gender lastName phoneNumber",
       })
       .populate("reviews");
 
@@ -130,6 +130,11 @@ exports.getProductsBySeller = async (req, res, next) => {
     const { sellerId } = req.params;
     const products = await Product.find({ postedBy: sellerId })
       .populate("categoryId")
+      .populate({
+        path: "postedBy",
+        select:
+          "business _id email profilePic firstName gender lastName phoneNumber",
+      })
       .populate("reviews");
 
     return res.status(200).json({
