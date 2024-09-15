@@ -151,7 +151,7 @@ exports.verifyFunding = async (req, res, next) => {
         });
       }
 
-      const chargeAmount = 0.05; // Example charge rate
+      const chargeAmount = 1; // Example charge rate
       const newAmount =
         parseFloat(paymentData.amount) / 100 -
         (parseFloat(paymentData.amount) / 100) * chargeAmount;

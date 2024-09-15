@@ -1,5 +1,5 @@
 const express = require("express");
-const adminRouter = express.Router();
+const adminCategoryRouter = express.Router();
 const { authorizeUser } = require("../../middlewares/apiKeyValidator");
 const {
   authenticateUser,
@@ -8,6 +8,6 @@ const {
   createCategory,
 } = require("../../controllers/admin/categoryController");
 
-adminRouter.post("/create", authorizeUser, authenticateUser, createCategory);
+adminCategoryRouter.post("/create", authorizeUser, authenticateUser, createCategory);
 
-module.exports = adminRouter;
+module.exports = adminCategoryRouter;

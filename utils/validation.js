@@ -529,3 +529,76 @@ exports.validateVerifyFunding = (details) => {
   });
   return schema.validate(details);
 };
+
+exports.validateSubAdminSignUp = (data) => {
+  const schema = Joi.object({
+    firstName: Joi.string().required(),
+    lastName: Joi.string().required(),
+    email: Joi.string().email().required(),
+    phoneNumber: Joi.string().required(),
+    password: Joi.string().min(6).required(),
+    role: Joi.string().valid("SUB_ADMIN").default("SUB_ADMIN"),
+    permissions: Joi.array()
+      .items(
+        Joi.string().valid(
+          "MEDIATE_IN_DISPUTE",
+          "READ_AND_RESPOND_TO_MESSAGES",
+          "VIEW_LISTING",
+          "DECLINE_AND_APPROVE_LISTING",
+          "SEE_TRANSACTIONS",
+          "APPROVE_PAYOUT_REQUESTS"
+        )
+      )
+      .required(),
+  });
+
+  return schema.validate(data);
+};
+
+exports.validateUpdateSubAdmin = (data) => {
+  const schema = Joi.object({
+    firstName: Joi.string().min(2).max(50).optional(),
+    lastName: Joi.string().min(2).max(50).optional(),
+    email: Joi.string().email().optional(),
+    phoneNumber: Joi.string().min(10).max(15).optional(),
+    password: Joi.string().min(6).optional(),
+    role: Joi.string().valid("sub-admin", "admin").optional(),
+    permissions: Joi.array()
+      .items(
+        Joi.string().valid(
+          "MEDIATE_IN_DISPUTE",
+          "READ_AND_RESPOND_TO_MESSAGES",
+          "VIEW_LISTING",
+          "DECLINE_AND_APPROVE_LISTING",
+          "SEE_TRANSACTIONS",
+          "APPROVE_PAYOUT_REQUESTS"
+        )
+      )
+      .optional(),
+    adminId: Joi.string()
+      .custom((value, helpers) => {
+        if (!mongoose.Types.ObjectId.isValid(value)) {
+          return helpers.message("Invalid sub-admin ID");
+        }
+        return value;
+      })
+      .required(),
+  });
+
+  return schema.validate(data, { abortEarly: false });
+};
+
+exports.validateAdminId = (data) => {
+  const schema = Joi.object({
+    adminId: Joi.string()
+      .custom((value, helpers) => {
+        if (!mongoose.Types.ObjectId.isValid(value)) {
+          return helpers.message("Invalid sub-admin ID");
+        }
+        return value;
+      })
+      .required(),
+  });
+
+  return schema.validate(data, { abortEarly: false });
+};

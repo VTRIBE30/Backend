@@ -8,12 +8,15 @@ const errorMiddleware = require("./middlewares/errorMiddleware");
 const { notFound } = require("./controllers/main/mainController");
 const accountRouter = require("./routes/user/accountRoute");
 const appealRouter = require("./routes/user/appealRoute");
-const adminRouter = require("./routes/admin/adminRoute");
 const categoryRouter = require("./routes/user/categoryRoute");
 const productRouter = require("./routes/user/productRoute");
 const orderRouter = require("./routes/user/orderRoute");
 const feedRouter = require("./routes/user/feedRoute");
 const chatRouter = require("./routes/user/chatRouter");
+const adminAuthRouter = require("./routes/admin/authRoute");
+const adminAccountRouter = require("./routes/admin/accountRoute");
+const adminCategoryRouter = require("./routes/admin/categoryRoute");
+const adminTransactionRouter = require("./routes/admin/transactionsRoute");
 
 // Main Routes
 app.use(mainRouter);
@@ -29,7 +32,10 @@ app.use("/v1/user/feed", feedRouter);
 app.use("/v1/user/chat", chatRouter);
 
 // Admin Routes
-app.use("/v1/admin/category", adminRouter);
+app.use("/v1/admin/auth", adminAuthRouter);
+app.use("/v1/admin/account", adminAccountRouter);
+app.use("/v1/admin/category", adminCategoryRouter);
+app.use("/v1/admin/transactions", adminTransactionRouter);
 
 // Catch-all route for handling 404 not found
 app.use(notFound);
