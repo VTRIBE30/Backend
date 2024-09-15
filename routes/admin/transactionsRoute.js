@@ -4,7 +4,7 @@ const { authorizeUser } = require("../../middlewares/apiKeyValidator");
 const {
   authenticateAdmin,
 } = require("../../middlewares/authenticationMiddleware");
-const { getAllTransactions, getTotalSalesBalance } = require("../../controllers/admin/transactionsController");
+const { getAllTransactions, getTotalSalesBalance, getTotalSalesPayOut } = require("../../controllers/admin/transactionsController");
 
 adminTransactionRouter.get(
   "/all",
@@ -18,6 +18,13 @@ adminTransactionRouter.get(
   authorizeUser,
   authenticateAdmin,
   getTotalSalesBalance
+);
+
+adminTransactionRouter.get(
+  "/total-payout",
+  authorizeUser,
+  authenticateAdmin,
+  getTotalSalesPayOut
 );
 
 module.exports = adminTransactionRouter;

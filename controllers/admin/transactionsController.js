@@ -44,7 +44,7 @@ exports.getTotalSalesBalance = async (req, res, next) => {
     const totalSales = await Transaction.aggregate([
       {
         $match: {
-        //   transactionType: "Wallet Payment",
+          transactionType: "Wallet Funding",
           transactionStatus: "Successful",
         },
       },
@@ -62,6 +62,39 @@ exports.getTotalSalesBalance = async (req, res, next) => {
     return res.status(200).json({
       status: true,
       message: "Total sales balance fetched successfully",
+      data: {
+        totalSalesBalance: salesBalance,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getTotalSalesPayOut = async (req, res, next) => {
+  try {
+    // Sum all successful 'Wallet Payment' transactions
+    const totalSales = await Transaction.aggregate([
+      {
+        $match: {
+          transactionType: "Wallet Withdrawal",
+          transactionStatus: "Successful",
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalAmount: { $sum: "$amount" },
+        },
+      },
+    ]);
+
+    // Check if there were any matching transactions
+    const salesBalance = totalSales.length > 0 ? totalSales[0].totalAmount : 0;
+
+    return res.status(200).json({
+      status: true,
+      message: "Total payouts fetched successfully",
       data: {
         totalSalesBalance: salesBalance,
       },
