@@ -752,6 +752,8 @@ exports.getUserRatingsAndReviews = async (req, res, next) => {
     }
     const { sellerId } = req.params;
 
+    const objectId = new mongoose.Types.ObjectId(sellerId);
+
     // Aggregate ratings and reviews for the user
     const reviewStats = await Review.aggregate([
       {
@@ -765,7 +767,7 @@ exports.getUserRatingsAndReviews = async (req, res, next) => {
       },
       {
         $match: {
-          "productDetails.postedBy": mongoose.Types.ObjectId.generate(sellerId),
+          'productDetails.postedBy': objectId,
         },
       },
       {
@@ -776,8 +778,6 @@ exports.getUserRatingsAndReviews = async (req, res, next) => {
         },
       },
     ]);
-
-    console.log(mongoose.Types.ObjectId.createFromBase64(sellerId));
 
     // Format the rating counts
     const ratings = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
