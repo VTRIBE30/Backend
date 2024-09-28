@@ -176,6 +176,8 @@ exports.validateProduct = (product) => {
     title: Joi.string().required(),
     condition: Joi.string().valid("New", "Fairly Used").required(),
     negotiable: Joi.boolean().required(),
+    promoted: Joi.boolean().required(),
+    abroadShipping: Joi.boolean().required(),
     totalPrice: Joi.number().required(),
     price: Joi.number().required(),
     bulkPrice: Joi.object({
@@ -210,8 +212,17 @@ exports.validateProduct = (product) => {
 
 exports.validateCategoryCreate = (data) => {
   const schema = Joi.object({
-    name: Joi.string().required(),
-    subCategories: Joi.array().required(),
+    name: Joi.string().required().label("Category Name"),
+    subCategory: Joi.string().required().label("Sub-Category Name"),
+    commissionPercent: Joi.number()
+      .min(0)
+      .required()
+      .label("Commission Percent"),
+    tags: Joi.array().items(Joi.string()).optional().label("Tags"),
+    attributes: Joi.object()
+      .pattern(Joi.string(), Joi.array().items(Joi.string()))
+      .optional()
+      .label("Attributes"),
   });
 
   return schema.validate(data);
@@ -320,7 +331,7 @@ exports.vaidateOrder = (details) => {
   return orderValidationSchema.validate(details);
 };
 
-exports.vaidateOrderId = (details) => {
+exports.validateOrderId = (details) => {
   const schema = Joi.object({
     orderId: Joi.string()
       .custom((value, helpers) => {
@@ -598,6 +609,14 @@ exports.validateAdminId = (data) => {
         return value;
       })
       .required(),
+  });
+
+  return schema.validate(data, { abortEarly: false });
+};
+
+exports.validateTrnsactionChartDetails = (data) => {
+  const schema = Joi.object({
+    period: Joi.string().required(),
   });
 
   return schema.validate(data, { abortEarly: false });

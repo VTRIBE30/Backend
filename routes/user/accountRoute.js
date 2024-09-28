@@ -20,6 +20,7 @@ const {
   verifyFunding,
   retrieveTransactionDetails,
   fetchTransactionHistory,
+  getUserRatingsAndReviews,
 } = require("../../controllers/user/accountController");
 const {
   authenticateUser,
@@ -146,6 +147,13 @@ accountRouter.get(
   authorizeUser,
   authenticateUser,
   retrieveTransactionDetails
+);
+
+accountRouter.get(
+  "/reviews/:sellerId",
+  authorizeUser,
+  authenticateUser,
+  getUserRatingsAndReviews
 );
 
 module.exports = accountRouter;

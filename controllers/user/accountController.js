@@ -13,12 +13,15 @@ const {
   vaidateProductId,
   validateInitiateFunding,
   validateVerifyFunding,
+  vaidateSellerId,
 } = require("../../utils/validation");
 const Notification = require("../../models/notification");
 const axios = require("axios");
 const Wallet = require("../../models/wallet");
 const { sendNotification } = require("../../services/notification");
 const Transaction = require("../../models/transaction");
+const Review = require("../../models/reviews");
+const mongoose = require("mongoose");
 
 // Initialize payment endpoint
 exports.initializeFunding = async (req, res, next) => {
@@ -171,7 +174,7 @@ exports.verifyFunding = async (req, res, next) => {
         body: `Your deposit of ₦${transaction.amount} was successful`,
         type: "ACCOUNT_ACTIVITY",
       };
-  
+
       await sendNotification(templateData, next);
 
       return res.status(200).json({
@@ -708,7 +711,7 @@ exports.retrieveTransactionDetails = async (req, res, next) => {
     // Return the transaction details to the client
     return res.status(200).json({ status: true, data: transaction });
   } catch (error) {
-    next(error)
+    next(error);
   }
 };
 
@@ -728,12 +731,89 @@ exports.fetchTransactionHistory = async (req, res, next) => {
       $or: [{ sender: userId }, { recipient: userId }],
     })
       .populate("wallet")
-      .populate("sender", 'firstName lastName')
-      .populate("recipient", 'firstName lastName')
+      .populate("sender", "firstName lastName")
+      .populate("recipient", "firstName lastName")
       .sort({ createdAt: -1 });
 
     return res.status(200).json({ status: true, transactions });
   } catch (error) {
-    next(error)
+    next(error);
+  }
+};
+
+exports.getUserRatingsAndReviews = async (req, res, next) => {
+  try {
+    const { error } = vaidateSellerId(req.params);
+    if (error) {
+      return res.status(400).json({
+        status: false,
+        error: error.details.map((detail) => detail.message),
+      });
+    }
+    const { sellerId } = req.params;
+
+    // Aggregate ratings and reviews for the user
+    const reviewStats = await Review.aggregate([
+      {
+        // Match reviews for products posted by this user
+        $lookup: {
+          from: "products",
+          localField: "product",
+          foreignField: "_id",
+          as: "productDetails",
+        },
+      },
+      {
+        $match: {
+          "productDetails.postedBy": mongoose.Types.ObjectId.generate(sellerId),
+        },
+      },
+      {
+        // Group by the rating and count the occurrences of each rating
+        $group: {
+          _id: "$rating",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    console.log(mongoose.Types.ObjectId.createFromBase64(sellerId));
+
+    // Format the rating counts
+    const ratings = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    let totalRatings = 0;
+    let totalRatingSum = 0;
+
+    reviewStats.forEach((rating) => {
+      ratings[rating._id] = rating.count;
+      totalRatings += rating.count;
+      totalRatingSum += rating._id * rating.count;
+    });
+
+    // Calculate the average rating
+    const averageRating =
+      totalRatings > 0 ? (totalRatingSum / totalRatings).toFixed(1) : 0;
+
+    // Fetch the reviews and comments
+    const userReviews = await Review.find({
+      product: {
+        $in: await Product.find({ postedBy: sellerId }).select("_id"),
+      },
+    })
+      .populate("user", "firstName lastName profilePic") // Get the user details who made the reviews
+      .populate("product", "title") // Optionally populate product details
+      .select("rating comment createdAt");
+
+    return res.status(200).json({
+      status: true,
+      data: {
+        ratings,
+        totalRatings,
+        averageRating,
+        reviews: userReviews,
+      },
+    });
+  } catch (error) {
+    next(error);
   }
 };

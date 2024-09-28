@@ -33,6 +33,7 @@ const orderSchema = new mongoose.Schema(
     },
     totalPrice: { type: Number, required: true },
     deliveryFee: { type: Number },
+    commissionAmount: { type: Number },
     details: { type: String },
     trackingNumber: { type: String },
     images: { type: Array },

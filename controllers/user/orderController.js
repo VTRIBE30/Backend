@@ -1,15 +1,17 @@
 const { cloudinaryOrderShipUploader } = require("../../middlewares/cloudinary");
+const Category = require("../../models/category");
 const Offer = require("../../models/offer");
 const Order = require("../../models/order");
 const Product = require("../../models/product");
 const Wallet = require("../../models/wallet");
+const { sendNotification } = require("../../services/notification");
 const {
   vaidateOrder,
-  vaidateOrderId,
   vaidateOrderStatus,
   vaidateMakeOffer,
   vaidateRespondToOffer,
   vaidateShipOrder,
+  validateOrderId,
 } = require("../../utils/validation");
 
 exports.placeOrder = async (req, res, next) => {
@@ -53,29 +55,16 @@ exports.placeOrder = async (req, res, next) => {
       userRole: "Buyer",
     });
 
-    // Check payment option and deduct from user's wallet if applicable
-    if (paymentOption === "Wallet Balance") {
-      const wallet = await Wallet.findOne({ userId });
-      //   console.log(wallet);
-
-      if (!wallet) {
-        return res
-          .status(400)
-          .json({ status: false, error: "Wallet not found" });
-      }
-      if (wallet.balance < totalPrice) {
-        return res
-          .status(400)
-          .json({ status: false, error: "Insufficient wallet balance" });
-      }
-
-      wallet.balance -= totalPrice;
-      await wallet.save();
-
-      order.status = "Paid";
-    }
-
     await order.save();
+
+    const templateData = {
+      userId: user._id,
+      title: "Order Place",
+      body: "Your order was placed successfully, Please wait for the seller to send the delivery cost",
+      type: "ACCOUNT_ACTIVITY",
+    };
+
+    await sendNotification(templateData, next);
 
     return res.status(201).json({
       status: true,
@@ -177,6 +166,42 @@ exports.submitShippingDetails = async (req, res, next) => {
   }
 };
 
+exports.payOrder = async (req, res, next) => {
+  try {
+    const { orderId } = req.params;
+    const { error } = vaidateShipOrder({ orderId, ...req.body });
+    if (error) {
+      return res.status(400).json({
+        status: false,
+        error: error.details.map((detail) => detail.message),
+      });
+    }
+
+    if (paymentOption === "Wallet Balance") {
+      const wallet = await Wallet.findOne({ userId });
+      //   console.log(wallet);
+
+      if (!wallet) {
+        return res
+          .status(400)
+          .json({ status: false, error: "Wallet not found" });
+      }
+      if (wallet.balance < totalPrice) {
+        return res
+          .status(400)
+          .json({ status: false, error: "Insufficient wallet balance" });
+      }
+
+      wallet.balance -= totalPrice;
+      await wallet.save();
+
+      order.status = "Paid";
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.shipOrder = async (req, res, next) => {
   try {
     const { orderId } = req.params;
@@ -191,17 +216,24 @@ exports.shipOrder = async (req, res, next) => {
       { _id: orderId },
       {
         $set: {
-          status: "Shipped"
+          status: "Shipped",
         },
       },
       { new: true }
     );
 
     if (!order) {
-      return res
-        .status(404)
-        .json({ status: false, error: "Order not found" });
+      return res.status(404).json({ status: false, error: "Order not found" });
     }
+
+    const templateData = {
+      userId: req.user.userId,
+      title: "Listing Order",
+      body: "Your order was shipped successfully, Please wait for the buyer to receive and complete order",
+      type: "ACCOUNT_ACTIVITY",
+    };
+
+    await sendNotification(templateData, next);
 
     return res.status(200).json({
       status: true,
@@ -215,32 +247,59 @@ exports.shipOrder = async (req, res, next) => {
 exports.completeOrder = async (req, res, next) => {
   try {
     const { orderId } = req.params;
-    const { error } = vaidateOrderId({ orderId });
+    const { error } = validateOrderId({ orderId });
     if (error) {
       return res.status(400).json({
         status: false,
         error: error.details.map((detail) => detail.message),
       });
     }
-    const order = await Order.findOneAndUpdate(
-      { _id: orderId },
-      {
-        $set: {
-          status: "Completed"
-        },
-      },
-      { new: true }
-    );
 
+    // Find the order by ID and populate the product details
+    const order = await Order.findById(orderId).populate("product");
     if (!order) {
-      return res
-        .status(404)
-        .json({ status: false, error: "Order not found" });
+      return res.status(404).json({ status: false, error: "Order not found" });
     }
+
+    // Check if the order is already completed
+    if (order.status === "Completed") {
+      return res
+        .status(400)
+        .json({ status: false, error: "Order already completed" });
+    }
+
+    // Calculate commission (using product's commission rate)
+    const commissionRate = order.product.commission / 100; // Assuming the commission field in the Product model is a percentage
+    const commissionAmount = order.totalPrice * commissionRate;
+
+    // Update the order with the calculated commission and status
+    order.commissionAmount = commissionAmount;
+    order.status = "Completed";
+    await order.save();
+
+    // Update the product's total commission
+    const product = await Product.findById(order.product._id);
+    product.totalCommission = (product.totalCommission || 0) + commissionAmount;
+    await product.save();
+
+    // Update the category's total commission
+    const category = await Category.findById(order.product.categoryId);
+    category.commission += commissionAmount;
+    await category.save();
+
+    const templateData = {
+      userId: req.user.userId,
+      title: "Order Completed",
+      body: "The order was completed successfully and the money has been released to the seller",
+      type: "ACCOUNT_ACTIVITY",
+    };
+
+    await sendNotification(templateData, next);
 
     return res.status(200).json({
       status: true,
       message: "Order completed successfully",
+      commissionEarned: commissionAmount,
     });
   } catch (error) {
     next(error);

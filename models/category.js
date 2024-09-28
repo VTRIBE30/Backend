@@ -6,9 +6,14 @@ const subCategorySchema = new mongoose.Schema({
 });
 
 const categorySchema = new mongoose.Schema({
-  name: { type: String, required: true },
+  name: { type: String, required: true, unique: true },
   subCategories: [subCategorySchema],
   commission: { type: Number, default: 0, required: true },
+  tags: { type: [String], default: [] }, // Tags for searchability
+  attributes: {
+    type: Map, 
+    of: [String], // Attributes like size, color, etc.
+  },
 });
 
 const Category = mongoose.model("Category", categorySchema);
