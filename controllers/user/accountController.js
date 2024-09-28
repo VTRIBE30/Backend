@@ -801,7 +801,7 @@ exports.getUserRatingsAndReviews = async (req, res, next) => {
       },
     })
       .populate("user", "firstName lastName profilePic") // Get the user details who made the reviews
-      .populate("product", "title") // Optionally populate product details
+      .populate("product", "title images") // Optionally populate product details
       .select("rating comment createdAt");
 
     return res.status(200).json({

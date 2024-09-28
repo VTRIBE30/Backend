@@ -257,6 +257,20 @@ exports.vaidateProductId = (details) => {
   return schema.validate(details);
 };
 
+exports.validateCategoryId = (details) => {
+  const schema = Joi.object({
+    categoryId: Joi.string()
+      .custom((value, helpers) => {
+        if (!mongoose.Types.ObjectId.isValid(value)) {
+          return helpers.message("Invalid Category ID");
+        }
+        return value;
+      })
+      .required(),
+  });
+  return schema.validate(details);
+};
+
 exports.vaidateProductFlag = (details) => {
   const schema = Joi.object({
     productId: Joi.string()
